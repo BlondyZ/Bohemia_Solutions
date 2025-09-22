@@ -29,6 +29,15 @@
     </EmbeddedResource>
   </ItemGroup>
 
+	<ItemGroup>
+		<Content Include="Content\changelog.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<TargetPath>changelog.json</TargetPath>
+			<!-- ← Tohle je důležité -->
+		</Content>
+	</ItemGroup>
+
+
   <ItemGroup>
     <Folder Include="UI\" />
   </ItemGroup>

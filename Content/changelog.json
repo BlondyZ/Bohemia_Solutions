@@ -1,0 +1,48 @@
+{
+  "Versions": [
+    {
+      "Version": "1.0.1",
+      "Date": "2025-09-23T00:00:00+02:00",
+      "Items": [
+        {
+          "Type": "ADDED",
+          "Text": "Status bar with app version and current time"
+        },
+        {
+          "Type": "ADDED",
+          "Text": "Changelog viewer \u002B admin-only editor"
+        },
+        {
+          "Type": "ADDED",
+          "Text": "Auto-sync of changelog.json from install folder to user profile"
+        },
+        {
+          "Type": "CHANGED",
+          "Text": "Layout of Single-player / Multi-player tabs (proper Dock/Anchor behavior)"
+        },
+        {
+          "Type": "CHANGED",
+          "Text": "\u201CMods\u201D group: listbox now fills the frame correctly"
+        },
+        {
+          "Type": "FIXED",
+          "Text": "DataGridViewComboBoxCell value is not valid when adding a new row"
+        },
+        {
+          "Type": "FIXED",
+          "Text": "Content no longer overlaps with the status bar on various DPIs"
+        }
+      ]
+    },
+    {
+      "Version": "1.0.0",
+      "Date": "2025-09-22T00:00:00",
+      "Items": [
+        {
+          "Type": "ADDED",
+          "Text": "Initial setup with all CORE features"
+        }
+      ]
+    }
+  ]
+}
