@@ -2,10 +2,12 @@ using Bohemia_Solutions.Models;
 using Bohemia_Solutions.Services;
 using Microsoft.VisualBasic;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -21,9 +23,8 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using WindowsFormsApp1.Models;
 using static Bohemia_Solutions.ParamsEditorForm;
-using Timer = System.Windows.Forms.Timer;
-using System.IO;
 using JsonSerializer = Newtonsoft.Json.JsonSerializer;
+using Timer = System.Windows.Forms.Timer;
 
 
 namespace Bohemia_Solutions
@@ -35,6 +36,7 @@ namespace Bohemia_Solutions
         public Form1()
         {
             InitializeComponent();
+            _ = CheckForUpdateAsync(Bohemia_Solutions.UpdateConfig.ManifestUrl);
             // (volitelně) si jednorázově vytvoř flag u sebe v debug buildu:
 #if DEBUG
             if (!File.Exists(Bohemia_Solutions.Paths.UserAdminFlag))
@@ -120,6 +122,65 @@ namespace Bohemia_Solutions
 
         }
 
+        protected override async void OnShown(EventArgs e)
+        {
+            base.OnShown(e);
+            // malá prodleva, ať ti nehází dialog přes splash UI
+            await Task.Delay(800); // malá pauza ať se UI usadí
+            try
+            {
+                await SimpleUpdater.CheckAndOfferAsync(this);
+            }
+            catch (Exception ex)
+            {
+                // dočasně pro debug – ať víme, že se to volá a když něco spadne, uvidíš proč
+                MessageBox.Show(this, ex.ToString(), "Updater error");
+            }
+        }
+
+
+        private async Task CheckForUpdateAsync(string manifestUrl)
+        {
+            try
+            {
+                using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(8) };
+                var json = await http.GetStringAsync(manifestUrl);
+
+                var jo = JObject.Parse(json);
+                var remoteVer = (string?)jo["version"] ?? "";
+                var url = (string?)jo["url"] ?? "";
+                var notesUrl = (string?)jo["releaseNotesUrl"] ?? "";
+
+                if (string.IsNullOrWhiteSpace(remoteVer) || string.IsNullOrWhiteSpace(url))
+                    return;
+
+                // porovnání verzí (v*.*.*)
+                if (IsNewer(remoteVer, Application.ProductVersion))
+                {
+                    var msg =
+                        $"New version {remoteVer} is available.\n\n" +
+                        $"Current version: {Application.ProductVersion}\n\n" +
+                        $"Open release notes?";
+                    if (MessageBox.Show(this, msg, "Update available", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
+                    {
+                        var open = string.IsNullOrWhiteSpace(notesUrl) ? url : notesUrl;
+                        try { Process.Start(new ProcessStartInfo(open) { UseShellExecute = true }); } catch { /* ignore */ }
+                    }
+                }
+            }
+            catch
+            {
+                // ticho: když není internet / 404 atd., jen neotravuj
+            }
+        }
+
+        private static bool IsNewer(string remote, string local)
+        {
+            // jednoduché porovnání semver vX.Y.Z
+            Version.TryParse(remote.TrimStart('v', 'V'), out var r);
+            Version.TryParse(local.TrimStart('v', 'V'), out var l);
+            return r != null && l != null && r > l;
+        }
 
         private void PanelSpInfo_Resize(object? sender, EventArgs e)
         {
