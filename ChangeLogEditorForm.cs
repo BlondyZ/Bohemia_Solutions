@@ -19,6 +19,9 @@ namespace Bohemia_Solutions
         {
             InitializeComponent();
             this.Load += ChangeLogEditorForm_Load;
+            dtpDate.Format = DateTimePickerFormat.Custom;
+            dtpDate.CustomFormat = "yyyy-MM-dd HH:mm";
+            dtpDate.ShowUpDown = true; // místo dropdown kalendáře (pohodlnější pro čas)
 
             // 1) DataGridView pojistky
             gridItems.DataError += (s, e) => e.ThrowException = false;
@@ -90,7 +93,8 @@ namespace Bohemia_Solutions
             }
 
             txtVersion.Text = _current.Version;
-            dtpDate.Value = _current.Date == default ? DateTime.Today : _current.Date;
+            dtpDate.Value = _current.Date == default ? DateTime.Now : _current.Date; // žádné .Date
+
 
             // Kritické: binduj přímo na BindingList<ChangeItem>
             _items = new BindingList<ChangeItem>(_current.Items.ToList());
@@ -138,7 +142,8 @@ namespace Bohemia_Solutions
             if (_current == null) return;
 
             _current.Version = txtVersion.Text.Trim();
-            _current.Date = dtpDate.Value.Date;
+            _current.Date = dtpDate.Value; // ponech čas!
+
 
             // Přepiš Items z BindingListu (vynech prázdné řádky)
             _current.Items.Clear();
@@ -163,6 +168,11 @@ namespace Bohemia_Solutions
             // znovu vyber právě editovanou verzi (podle čísla)
             var sel = _log.Versions.FirstOrDefault(v => v.Version == _current.Version && v.Date == _current.Date);
             if (sel != null) lstVersions.SelectedItem = sel;
+        }
+
+        private void ChangeLogEditorForm_Load_1(object sender, EventArgs e)
+        {
+
         }
     }
 }

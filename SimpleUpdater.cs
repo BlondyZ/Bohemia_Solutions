@@ -13,6 +13,33 @@ namespace Bohemia_Solutions.Services
 {
     internal static class SimpleUpdater
     {
+
+        private static async Task DownloadWithProgressAsync(string url, string dstFile, IProgress<(int, string)> progress)
+        {
+            using var http = new HttpClient { Timeout = TimeSpan.FromMinutes(5) };
+            using var resp = await http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
+            resp.EnsureSuccessStatusCode();
+
+            var total = resp.Content.Headers.ContentLength ?? -1L;
+            await using var src = await resp.Content.ReadAsStreamAsync();
+            await using var dst = File.Create(dstFile);
+
+            var buffer = new byte[81920];
+            long readTotal = 0;
+            int read;
+            while ((read = await src.ReadAsync(buffer, 0, buffer.Length)) > 0)
+            {
+                await dst.WriteAsync(buffer, 0, read);
+                readTotal += read;
+                if (total > 0)
+                {
+                    int p = (int)(readTotal * 60 / total); // 0–60% pro download
+                    progress.Report((p, $"Downloading… {p}%"));
+                }
+            }
+            progress.Report((60, "Download complete"));
+        }
+
         public static async Task CheckAndOfferAsync(IWin32Window owner)
         {
             try
@@ -42,7 +69,19 @@ namespace Bohemia_Solutions.Services
 
                 if (res != DialogResult.Yes) return;
 
-                await ApplyUpdateAsync(owner, zipUrl, sha256);
+                // progress dialog
+                using var dlg = new UpdateProgressForm();
+                dlg.Show(owner); // non-modal nad rodičem
+
+                var prog = new Progress<(int, string)>(t => dlg.Report(t.Item1, t.Item2));
+                try
+                {
+                    await ApplyUpdateAsync(owner, zipUrl, sha256, prog);
+                }
+                finally
+                {
+                    dlg.Close();
+                }
             }
             catch
             {
@@ -50,33 +89,57 @@ namespace Bohemia_Solutions.Services
             }
         }
 
-        private static async Task ApplyUpdateAsync(IWin32Window owner, string zipUrl, string sha256Hex)
+        private static async Task ExtractZipWithProgressAsync(string zipPath, string extractDir, IProgress<(int, string)> progress)
+        {
+            Directory.CreateDirectory(extractDir);
+            using var z = System.IO.Compression.ZipFile.OpenRead(zipPath);
+            int total = z.Entries.Count;
+            int i = 0;
+            foreach (var e in z.Entries)
+            {
+                string fullPath = Path.Combine(extractDir, e.FullName);
+                Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
+                if (e.FullName.EndsWith("/")) { /* folder */ }
+                else
+                {
+                    using var zs = e.Open();
+                    using var fs = File.Create(fullPath);
+                    await zs.CopyToAsync(fs);
+                }
+                i++;
+                int p = 60 + (int)(25.0 * i / Math.Max(1, total)); // 60–85%
+                progress.Report((p, $"Extracting… {p}%"));
+            }
+            progress.Report((85, "Extraction complete"));
+        }
+
+
+        private static async Task ApplyUpdateAsync(IWin32Window owner, string zipUrl, string sha256Hex, IProgress<(int, string)> progress)
         {
             string tmpRoot = Path.Combine(Path.GetTempPath(), "BohemiaSolutions", Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(tmpRoot);
 
             string zipPath = Path.Combine(tmpRoot, "update.zip");
-            using (var http = new HttpClient { Timeout = TimeSpan.FromMinutes(5) })
-            using (var s = await http.GetStreamAsync(zipUrl))
-            using (var f = File.Create(zipPath))
-                await s.CopyToAsync(f);
+            progress.Report((1, "Starting download…"));
+            await DownloadWithProgressAsync(zipUrl, zipPath, progress);
 
             if (!string.IsNullOrWhiteSpace(sha256Hex))
+            {
+                progress.Report((61, "Verifying package…"));
                 VerifySha256(zipPath, sha256Hex);
+            }
 
             string extractDir = Path.Combine(tmpRoot, "extracted");
-            ZipFile.ExtractToDirectory(zipPath, extractDir, overwriteFiles: true);
+            await ExtractZipWithProgressAsync(zipPath, extractDir, progress);
 
-            // najdi novou EXE (název může být shodný s existujícím)
+            // připrav BAT
             string currentExe = Application.ExecutablePath;
             string installDir = AppContext.BaseDirectory.TrimEnd('\\');
-            string newExe = FindExe(extractDir) ?? currentExe;
 
-            // vytvoř update skript (BAT) do TEMP
             string batPath = Path.Combine(tmpRoot, "run_update.bat");
             File.WriteAllText(batPath, BuildUpdateBat(), Encoding.ASCII);
 
-            // spusť BAT a předej parametry
+            progress.Report((90, "Finalizing…"));
             var psi = new ProcessStartInfo
             {
                 FileName = "cmd.exe",
@@ -87,8 +150,7 @@ namespace Bohemia_Solutions.Services
             };
             Process.Start(psi);
 
-
-            // zavři aplikaci, aby mohl skript přepsat soubory
+            progress.Report((100, "Restarting…"));
             Application.Exit();
         }
 
@@ -175,7 +237,7 @@ if %errorlevel%==0 (timeout /t 1 >nul & goto wait)
 
 :: 1) vše kromě konfigů
 robocopy ""%SRC%"" ""%DST%"" /E /R:3 /W:1 /NFL /NDL /NJH /NJS ^
-  /XF configs.json config.json sp_configs.json filters_global.json paths.json
+  /XF configs.json config.json sp_configs.json filters_global.json paths.json settings.ini changelog_admin.json
 
 :: 2) přepiš changelog z releasu
 if exist ""%SRC%\changelog.json"" copy /Y ""%SRC%\changelog.json"" ""%DST%\changelog.json"" >nul

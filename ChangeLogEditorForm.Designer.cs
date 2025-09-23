@@ -107,6 +107,7 @@
             Name = "ChangeLogEditorForm";
             StartPosition = FormStartPosition.CenterParent;
             Text = "Edit Changelog";
+            Load += ChangeLogEditorForm_Load_1;
             ((System.ComponentModel.ISupportInitialize)gridItems).EndInit();
             ResumeLayout(false);
             PerformLayout();
