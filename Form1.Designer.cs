@@ -52,7 +52,6 @@ namespace Bohemia_Solutions
             pbButton3 = new PictureBox();
             btnRefreshBaseDayzServer = new Button();
             tbControllAll = new TabControl();
-            tp_Multiplayer = new TabPage();
             tp_SinglePlayer = new TabPage();
             panel_SP_info = new Panel();
             label5 = new Label();
@@ -61,10 +60,14 @@ namespace Bohemia_Solutions
             pictureBox1 = new PictureBox();
             pictureBox2 = new PictureBox();
             panel2 = new Panel();
+            pnl_loading_update = new Panel();
+            lbl_downloading_text = new Label();
+            picLoading = new PictureBox();
             btn_remove_sp = new Button();
             listViewConfigsSP = new ListView();
             btn_edit_sp = new Button();
             btn_add_sp = new Button();
+            tp_Multiplayer = new TabPage();
             pbButton10 = new PictureBox();
             pbButton9 = new PictureBox();
             pbButton8 = new PictureBox();
@@ -88,12 +91,14 @@ namespace Bohemia_Solutions
             ((System.ComponentModel.ISupportInitialize)pbButton2).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pbButton3).BeginInit();
             tbControllAll.SuspendLayout();
-            tp_Multiplayer.SuspendLayout();
             tp_SinglePlayer.SuspendLayout();
             panel_SP_info.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pictureBox2).BeginInit();
             panel2.SuspendLayout();
+            pnl_loading_update.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)picLoading).BeginInit();
+            tp_Multiplayer.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)pbButton10).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pbButton9).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pbButton8).BeginInit();
@@ -132,7 +137,7 @@ namespace Bohemia_Solutions
             panel1.Controls.Add(btn_add);
             panel1.Location = new Point(8, 14);
             panel1.Name = "panel1";
-            panel1.Size = new Size(709, 773);
+            panel1.Size = new Size(674, 773);
             panel1.TabIndex = 10;
             // 
             // btn_remove
@@ -150,7 +155,7 @@ namespace Bohemia_Solutions
             // 
             listViewConfigs.Location = new Point(13, 17);
             listViewConfigs.Name = "listViewConfigs";
-            listViewConfigs.Size = new Size(681, 720);
+            listViewConfigs.Size = new Size(651, 720);
             listViewConfigs.TabIndex = 12;
             listViewConfigs.UseCompatibleStateImageBehavior = false;
             listViewConfigs.View = View.Details;
@@ -179,9 +184,9 @@ namespace Bohemia_Solutions
             pnl_Server_Info.Controls.Add(btnStopServer);
             pnl_Server_Info.Controls.Add(pb_red);
             pnl_Server_Info.Controls.Add(pb_green);
-            pnl_Server_Info.Location = new Point(723, 14);
+            pnl_Server_Info.Location = new Point(688, 14);
             pnl_Server_Info.Name = "pnl_Server_Info";
-            pnl_Server_Info.Size = new Size(1067, 773);
+            pnl_Server_Info.Size = new Size(1016, 773);
             pnl_Server_Info.TabIndex = 11;
             // 
             // lbl_ip_adress
@@ -326,7 +331,7 @@ namespace Bohemia_Solutions
             btnRefreshBaseDayzServer.BackColor = Color.Transparent;
             btnRefreshBaseDayzServer.BackgroundImage = (Image)resources.GetObject("btnRefreshBaseDayzServer.BackgroundImage");
             btnRefreshBaseDayzServer.BackgroundImageLayout = ImageLayout.Stretch;
-            btnRefreshBaseDayzServer.Location = new Point(1764, 33);
+            btnRefreshBaseDayzServer.Location = new Point(1674, 54);
             btnRefreshBaseDayzServer.Name = "btnRefreshBaseDayzServer";
             btnRefreshBaseDayzServer.Size = new Size(50, 50);
             btnRefreshBaseDayzServer.TabIndex = 21;
@@ -336,26 +341,13 @@ namespace Bohemia_Solutions
             // 
             // tbControllAll
             // 
-            tbControllAll.Controls.Add(tp_Multiplayer);
             tbControllAll.Controls.Add(tp_SinglePlayer);
+            tbControllAll.Controls.Add(tp_Multiplayer);
             tbControllAll.Location = new Point(10, 86);
             tbControllAll.Name = "tbControllAll";
             tbControllAll.SelectedIndex = 0;
-            tbControllAll.Size = new Size(1811, 821);
+            tbControllAll.Size = new Size(1718, 821);
             tbControllAll.TabIndex = 22;
-            // 
-            // tp_Multiplayer
-            // 
-            tp_Multiplayer.Controls.Add(panel1);
-            tp_Multiplayer.Controls.Add(pnl_Server_Info);
-            tp_Multiplayer.Location = new Point(4, 24);
-            tp_Multiplayer.Name = "tp_Multiplayer";
-            tp_Multiplayer.Padding = new Padding(3);
-            tp_Multiplayer.Size = new Size(1803, 793);
-            tp_Multiplayer.TabIndex = 0;
-            tp_Multiplayer.Text = "Multi-player";
-            tp_Multiplayer.UseVisualStyleBackColor = true;
-            tp_Multiplayer.Click += tp_Multiplayer_Click;
             // 
             // tp_SinglePlayer
             // 
@@ -364,7 +356,7 @@ namespace Bohemia_Solutions
             tp_SinglePlayer.Location = new Point(4, 24);
             tp_SinglePlayer.Name = "tp_SinglePlayer";
             tp_SinglePlayer.Padding = new Padding(3);
-            tp_SinglePlayer.Size = new Size(1803, 793);
+            tp_SinglePlayer.Size = new Size(1710, 793);
             tp_SinglePlayer.TabIndex = 1;
             tp_SinglePlayer.Text = "Single-player";
             tp_SinglePlayer.UseVisualStyleBackColor = true;
@@ -379,9 +371,9 @@ namespace Bohemia_Solutions
             panel_SP_info.Controls.Add(button5);
             panel_SP_info.Controls.Add(pictureBox1);
             panel_SP_info.Controls.Add(pictureBox2);
-            panel_SP_info.Location = new Point(743, 14);
+            panel_SP_info.Location = new Point(688, 14);
             panel_SP_info.Name = "panel_SP_info";
-            panel_SP_info.Size = new Size(1047, 773);
+            panel_SP_info.Size = new Size(1016, 773);
             panel_SP_info.TabIndex = 12;
             // 
             // label5
@@ -445,8 +437,38 @@ namespace Bohemia_Solutions
             panel2.Controls.Add(btn_add_sp);
             panel2.Location = new Point(8, 14);
             panel2.Name = "panel2";
-            panel2.Size = new Size(729, 773);
+            panel2.Size = new Size(674, 773);
             panel2.TabIndex = 11;
+            // 
+            // pnl_loading_update
+            // 
+            pnl_loading_update.BackgroundImageLayout = ImageLayout.None;
+            pnl_loading_update.Controls.Add(lbl_downloading_text);
+            pnl_loading_update.Controls.Add(picLoading);
+            pnl_loading_update.Location = new Point(0, 32);
+            pnl_loading_update.Name = "pnl_loading_update";
+            pnl_loading_update.Size = new Size(1734, 867);
+            pnl_loading_update.TabIndex = 30;
+            // 
+            // lbl_downloading_text
+            // 
+            lbl_downloading_text.AutoSize = true;
+            lbl_downloading_text.Font = new Font("Segoe UI", 14.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            lbl_downloading_text.Location = new Point(650, 443);
+            lbl_downloading_text.Name = "lbl_downloading_text";
+            lbl_downloading_text.Size = new Size(507, 25);
+            lbl_downloading_text.TabIndex = 31;
+            lbl_downloading_text.Text = "Downloading and installing new version, please wait......";
+            // 
+            // picLoading
+            // 
+            picLoading.Image = (Image)resources.GetObject("picLoading.Image");
+            picLoading.Location = new Point(24, 24);
+            picLoading.Name = "picLoading";
+            picLoading.Size = new Size(1704, 369);
+            picLoading.SizeMode = PictureBoxSizeMode.CenterImage;
+            picLoading.TabIndex = 30;
+            picLoading.TabStop = false;
             // 
             // btn_remove_sp
             // 
@@ -463,7 +485,7 @@ namespace Bohemia_Solutions
             // 
             listViewConfigsSP.Location = new Point(13, 17);
             listViewConfigsSP.Name = "listViewConfigsSP";
-            listViewConfigsSP.Size = new Size(709, 720);
+            listViewConfigsSP.Size = new Size(651, 720);
             listViewConfigsSP.TabIndex = 12;
             listViewConfigsSP.UseCompatibleStateImageBehavior = false;
             listViewConfigsSP.View = View.Details;
@@ -488,6 +510,19 @@ namespace Bohemia_Solutions
             btn_add_sp.Text = "Add";
             btn_add_sp.UseVisualStyleBackColor = true;
             btn_add_sp.Click += btn_add_sp_Click;
+            // 
+            // tp_Multiplayer
+            // 
+            tp_Multiplayer.Controls.Add(panel1);
+            tp_Multiplayer.Controls.Add(pnl_Server_Info);
+            tp_Multiplayer.Location = new Point(4, 24);
+            tp_Multiplayer.Name = "tp_Multiplayer";
+            tp_Multiplayer.Padding = new Padding(3);
+            tp_Multiplayer.Size = new Size(1710, 793);
+            tp_Multiplayer.TabIndex = 0;
+            tp_Multiplayer.Text = "Multi-player";
+            tp_Multiplayer.UseVisualStyleBackColor = true;
+            tp_Multiplayer.Click += tp_Multiplayer_Click;
             // 
             // pbButton10
             // 
@@ -543,7 +578,7 @@ namespace Bohemia_Solutions
             tsTop.Location = new Point(0, 0);
             tsTop.Name = "tsTop";
             tsTop.Padding = new Padding(0, 1, 0, 1);
-            tsTop.Size = new Size(1823, 29);
+            tsTop.Size = new Size(1734, 29);
             tsTop.TabIndex = 28;
             tsTop.Text = "toolStrip1";
             tsTop.ItemClicked += tsTop_ItemClicked;
@@ -595,14 +630,14 @@ namespace Bohemia_Solutions
             statusStrip1.Items.AddRange(new ToolStripItem[] { lblActualVersion, lblVersion, lblBuildTime });
             statusStrip1.Location = new Point(0, 902);
             statusStrip1.Name = "statusStrip1";
-            statusStrip1.Size = new Size(1823, 30);
+            statusStrip1.Size = new Size(1734, 30);
             statusStrip1.TabIndex = 29;
             statusStrip1.Text = "statusStrip1";
             // 
             // lblActualVersion
             // 
             lblActualVersion.Name = "lblActualVersion";
-            lblActualVersion.Size = new Size(1465, 25);
+            lblActualVersion.Size = new Size(1407, 25);
             lblActualVersion.Spring = true;
             lblActualVersion.Text = "toolStripStatusLabel1";
             lblActualVersion.Visible = false;
@@ -631,14 +666,14 @@ namespace Bohemia_Solutions
             AutoScaleMode = AutoScaleMode.Font;
             AutoSize = true;
             AutoSizeMode = AutoSizeMode.GrowAndShrink;
-            ClientSize = new Size(1823, 932);
+            ClientSize = new Size(1734, 932);
+            Controls.Add(pnl_loading_update);
             Controls.Add(statusStrip1);
             Controls.Add(tsTop);
             Controls.Add(pbButton10);
             Controls.Add(pbButton9);
             Controls.Add(pbButton8);
             Controls.Add(pbButton7);
-            Controls.Add(tbControllAll);
             Controls.Add(btnRefreshBaseDayzServer);
             Controls.Add(pbButton6);
             Controls.Add(pbButton5);
@@ -647,6 +682,7 @@ namespace Bohemia_Solutions
             Controls.Add(pbButton3);
             Controls.Add(pbButton1);
             Controls.Add(pbButton2);
+            Controls.Add(tbControllAll);
             Name = "Form1";
             SizeGripStyle = SizeGripStyle.Hide;
             StartPosition = FormStartPosition.CenterScreen;
@@ -664,13 +700,16 @@ namespace Bohemia_Solutions
             ((System.ComponentModel.ISupportInitialize)pbButton2).EndInit();
             ((System.ComponentModel.ISupportInitialize)pbButton3).EndInit();
             tbControllAll.ResumeLayout(false);
-            tp_Multiplayer.ResumeLayout(false);
             tp_SinglePlayer.ResumeLayout(false);
             panel_SP_info.ResumeLayout(false);
             panel_SP_info.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();
             ((System.ComponentModel.ISupportInitialize)pictureBox2).EndInit();
             panel2.ResumeLayout(false);
+            pnl_loading_update.ResumeLayout(false);
+            pnl_loading_update.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)picLoading).EndInit();
+            tp_Multiplayer.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)pbButton10).EndInit();
             ((System.ComponentModel.ISupportInitialize)pbButton9).EndInit();
             ((System.ComponentModel.ISupportInitialize)pbButton8).EndInit();
@@ -731,5 +770,8 @@ namespace Bohemia_Solutions
         private ToolStripStatusLabel lblActualVersion;
         private ToolStripStatusLabel lblVersion;
         private ToolStripStatusLabel lblBuildTime;
+        private PictureBox picLoading;
+        private Panel pnl_loading_update;
+        private Label lbl_downloading_text;
     }
 }

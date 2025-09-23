@@ -85,6 +85,42 @@
           "Text": "Changelog editor supports time selection (DateTime); dates are stored as \u0027yyyy-MM-dd HH:mm:ss\u0027."
         }
       ]
+    },
+    {
+      "Version": "1.0.5",
+      "Date": "2025-09-23T17:00:00",
+      "Items": [
+        {
+          "Type": "REMOVED",
+          "Text": "Progressbar, due to wide GUI"
+        },
+        {
+          "Type": "CHANGED",
+          "Text": "Added new GUI - loading GIF as overlay when updating application"
+        }
+      ]
+    },
+    {
+      "Version": "1.0.6",
+      "Date": "2025-09-23T17:45:00",
+      "Items": [
+        {
+          "Type": "ADDED",
+          "Text": "Horizontal scrolling for panel_SP_info and pnl_Server_Info when content exceeds the panel width."
+        },
+        {
+          "Type": "CHANGED",
+          "Text": "Unified fit-to-width resize: labels now wrap (MaximumSize), other controls are no longer forcibly shrunk to panel width."
+        },
+        {
+          "Type": "ADDED",
+          "Text": "Auto-maximize Form1 on small screens (below ~1400\u00D7900)."
+        },
+        {
+          "Type": "FIXED",
+          "Text": "Right-side actions (e.g., Open/Edit/Show) were inaccessible on narrow displays; now reachable via horizontal scroll."
+        }
+      ]
     }
   ]
 }

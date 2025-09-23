@@ -40,7 +40,11 @@ namespace Bohemia_Solutions.Services
             progress.Report((60, "Download complete"));
         }
 
-        public static async Task CheckAndOfferAsync(IWin32Window owner)
+        public static async Task CheckAndOfferAsync(
+     IWin32Window owner,
+     Action<string>? onBegin = null,   // ← zavoláme těsně před downloadem
+     Action? onEnd = null              // ← zavoláme při chybě / zrušení; při úspěchu se appka ukončí
+ )
         {
             try
             {
@@ -53,7 +57,6 @@ namespace Bohemia_Solutions.Services
                 var sha256 = ((string?)jo["sha256"] ?? "").Trim().ToLowerInvariant();
                 var notesUrl = (string?)jo["releaseNotesUrl"] ?? "";
 
-               
                 if (string.IsNullOrWhiteSpace(remoteVer) || string.IsNullOrWhiteSpace(zipUrl))
                     return;
 
@@ -64,28 +67,27 @@ namespace Bohemia_Solutions.Services
                 var msg = $"New version {remoteVer} is available.\n\n" +
                           $"Current version: {currentPretty}\n\n" +
                           $"Update now?";
+
                 var res = MessageBox.Show(owner, msg, "Update available",
                     MessageBoxButtons.YesNo, MessageBoxIcon.Information);
 
                 if (res != DialogResult.Yes) return;
 
-                // progress dialog
-                using var dlg = new UpdateProgressForm();
-                dlg.Show(owner); // non-modal nad rodičem
+                // ←—— TADY zobrazíme overlay
+                onBegin?.Invoke("Downloading and installing new version, please wait...");
 
-                var prog = new Progress<(int, string)>(t => dlg.Report(t.Item1, t.Item2));
-                try
-                {
-                    await ApplyUpdateAsync(owner, zipUrl, sha256, prog);
-                }
-                finally
-                {
-                    dlg.Close();
-                }
+                await ApplyUpdateAsync(owner, zipUrl, sha256);
+                // při úspěšném update dojde v ApplyUpdateAsync k Application.Exit();
             }
             catch
             {
-                // ticho – žádné otravování při chybě sítě apod.
+                // schválně ticho – nechceme rušit uživatele chybou sítě apod.
+            }
+            finally
+            {
+                // pokud jsme overlay ukázali a UPDATE nakonec neproběhl (chyba / zrušení),
+                // tak ho schováme (při úspěchu se appka ukončí a tohle se už neprojeví).
+                onEnd?.Invoke();
             }
         }
 
@@ -114,23 +116,25 @@ namespace Bohemia_Solutions.Services
         }
 
 
-        private static async Task ApplyUpdateAsync(IWin32Window owner, string zipUrl, string sha256Hex, IProgress<(int, string)> progress)
+        private static async Task ApplyUpdateAsync(IWin32Window owner, string zipUrl, string sha256Hex)
         {
             string tmpRoot = Path.Combine(Path.GetTempPath(), "BohemiaSolutions", Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(tmpRoot);
 
+            // stáhni ZIP
             string zipPath = Path.Combine(tmpRoot, "update.zip");
-            progress.Report((1, "Starting download…"));
-            await DownloadWithProgressAsync(zipUrl, zipPath, progress);
+            using (var http = new HttpClient { Timeout = TimeSpan.FromMinutes(5) })
+            using (var s = await http.GetStreamAsync(zipUrl))
+            using (var f = File.Create(zipPath))
+                await s.CopyToAsync(f);
 
+            // ověř checksum (pokud je k dispozici)
             if (!string.IsNullOrWhiteSpace(sha256Hex))
-            {
-                progress.Report((61, "Verifying package…"));
                 VerifySha256(zipPath, sha256Hex);
-            }
 
+            // rozbal
             string extractDir = Path.Combine(tmpRoot, "extracted");
-            await ExtractZipWithProgressAsync(zipPath, extractDir, progress);
+            ZipFile.ExtractToDirectory(zipPath, extractDir, overwriteFiles: true);
 
             // připrav BAT
             string currentExe = Application.ExecutablePath;
@@ -139,7 +143,7 @@ namespace Bohemia_Solutions.Services
             string batPath = Path.Combine(tmpRoot, "run_update.bat");
             File.WriteAllText(batPath, BuildUpdateBat(), Encoding.ASCII);
 
-            progress.Report((90, "Finalizing…"));
+            // spusť BAT (zkopíruje soubory a nastartuje novou verzi)
             var psi = new ProcessStartInfo
             {
                 FileName = "cmd.exe",
@@ -150,9 +154,10 @@ namespace Bohemia_Solutions.Services
             };
             Process.Start(psi);
 
-            progress.Report((100, "Restarting…"));
+            // ukonči běžící aplikaci
             Application.Exit();
         }
+
 
         private static void VerifySha256(string file, string expectedHex)
         {

@@ -36,6 +36,20 @@ namespace Bohemia_Solutions
         public Form1()
         {
             InitializeComponent();
+            // --- overlay init ---
+            pnl_loading_update.Visible = false;           // defaultně skryté
+            this.UseWaitCursor = false;
+
+            lbl_downloading_text.AutoSize = true;
+            lbl_downloading_text.TextAlign = ContentAlignment.MiddleCenter;
+            lbl_downloading_text.ForeColor = SystemColors.ControlText;
+            // pokud bys měl Panel s jinou barvou, klidně:
+            lbl_downloading_text.BackColor = Color.Transparent;
+
+            pnl_loading_update.Resize += (_, __) => PositionUpdateOverlay();
+            this.Resize += (_, __) => PositionUpdateOverlay();
+
+
             _ = CheckForUpdateAsync(Bohemia_Solutions.UpdateConfig.ManifestUrl);
             // (volitelně) si jednorázově vytvoř flag u sebe v debug buildu:
 #if DEBUG
@@ -114,6 +128,10 @@ namespace Bohemia_Solutions
             RefreshSpListView();
             BuildSpFilterBarUI();
 
+            // sjednocená logika pro oba panely
+            WireScrollablePanel(pnl_Server_Info);
+            WireScrollablePanel(panel_SP_info);
+
 
 
             // Dvojklik na řádek = Edit
@@ -122,20 +140,110 @@ namespace Bohemia_Solutions
 
         }
 
+        private void MaybeMaximizeForSmallScreens()
+        {
+            var wa = Screen.FromControl(this).WorkingArea;
+            const int MinW = 1400;
+            const int MinH = 900;
+
+            if (wa.Width < MinW || wa.Height < MinH)
+                this.WindowState = FormWindowState.Maximized;
+        }
+
+
+
+        private void PositionUpdateOverlay()
+        {
+            if (!pnl_loading_update.Visible) return;
+
+            // centrování spinneru
+            var cs = pnl_loading_update.ClientSize;
+            var xSpinner = (cs.Width - picLoading.Width) / 2;
+            var ySpinner = (cs.Height - picLoading.Height) / 2 - 20;
+            picLoading.Location = new Point(Math.Max(0, xSpinner), Math.Max(0, ySpinner));
+
+            // centrování textu pod spinner
+            lbl_downloading_text.AutoSize = true;
+            lbl_downloading_text.Location = new Point(
+                Math.Max(0, (cs.Width - lbl_downloading_text.Width) / 2),
+                picLoading.Bottom + 16
+            );
+
+            // jistota pořadí
+            pnl_loading_update.BringToFront();
+            picLoading.BringToFront();
+            lbl_downloading_text.BringToFront();
+        }
+
+        private void ShowUpdateOverlay(string text = "Downloading and installing new version, please wait…")
+        {
+            lbl_downloading_text.Text = text;
+            lbl_downloading_text.Visible = true;
+
+            pnl_loading_update.Visible = true;
+            pnl_loading_update.BringToFront();
+
+            this.UseWaitCursor = true;    // čekací kurzor pro celé okno
+            PositionUpdateOverlay();
+        }
+
+        private void HideUpdateOverlay()
+        {
+            this.UseWaitCursor = false;
+            pnl_loading_update.Visible = false;
+        }
+
+
+        // --- UPDATE OVERLAY (panel: pnl_loading_update, PictureBox: picLoading, Label: lbl_downloading_text) ---
+
+        private void InitUpdateOverlay()
+        {
+            // overlay přes celý formulář
+            pnl_loading_update.Dock = DockStyle.Fill;
+            pnl_loading_update.BringToFront();
+
+            // pro test pozice si můžeš nechat viditelné, ale normálně to schováme:
+            //pnl_loading_update.Visible = true;    // ← nech si to teď klidně odkomentované kvůli ověření pozice
+            pnl_loading_update.Visible = false;     // ← standardně schované (až potvrdí update, zobrazíme)
+
+            CenterUpdateOverlay();
+            // centrovat při každé změně velikosti
+            this.Resize += (_, __) => CenterUpdateOverlay();
+            pnl_loading_update.Resize += (_, __) => CenterUpdateOverlay();
+        }
+
+        private void CenterUpdateOverlay()
+        {
+            // bezpečnost
+            if (pnl_loading_update == null || picLoading == null || lbl_downloading_text == null) return;
+
+            // přepočet pozic – vždy doprostřed
+            int cx = Math.Max(0, (pnl_loading_update.ClientSize.Width - picLoading.Width) / 2);
+            int cy = Math.Max(0, (pnl_loading_update.ClientSize.Height - picLoading.Height) / 2) - 16; // lehce výš
+
+            picLoading.Location = new Point(cx, cy);
+
+            // text pod spinnerem
+            lbl_downloading_text.AutoSize = true; // ať si spočítá vlastní šířku
+            lbl_downloading_text.Location = new Point(
+                Math.Max(0, (pnl_loading_update.ClientSize.Width - lbl_downloading_text.Width) / 2),
+                picLoading.Bottom + 12
+            );
+        }
+
+
         protected override async void OnShown(EventArgs e)
         {
             base.OnShown(e);
-            // malá prodleva, ať ti nehází dialog přes splash UI
-            await Task.Delay(800); // malá pauza ať se UI usadí
-            try
-            {
-                await SimpleUpdater.CheckAndOfferAsync(this);
-            }
-            catch (Exception ex)
-            {
-                // dočasně pro debug – ať víme, že se to volá a když něco spadne, uvidíš proč
-                MessageBox.Show(this, ex.ToString(), "Updater error");
-            }
+
+            MaybeMaximizeForSmallScreens();
+
+            await Task.Delay(800);
+            await SimpleUpdater.CheckAndOfferAsync(
+                this,
+                onBegin: txt => BeginInvoke(new Action(() => ShowUpdateOverlay(txt))),
+                onEnd: () => BeginInvoke(new Action(HideUpdateOverlay))
+            );
         }
 
 
@@ -995,6 +1103,53 @@ namespace Bohemia_Solutions
             // Ulož DELEGÁT do panelu_SP_info (ne do pnl_Client_Info!)
             panel_SP_info.Tag = (Action<IEnumerable<string>>)SetMods;
         }
+
+
+        // === Scroll host helper (fit-to-width + horizontal scroll fallback) ===
+        private void WireScrollablePanel(Panel host)
+        {
+            host.AutoScroll = true; // už máš; jen pro jistotu
+            host.Resize -= ScrollHost_Resize; // proti duplicitám
+            host.Resize += ScrollHost_Resize;
+
+            // první přepočet hned
+            ScrollHost_Resize(host, EventArgs.Empty);
+        }
+
+        private void ScrollHost_Resize(object? sender, EventArgs e)
+        {
+            if (sender is not Panel host) return;
+
+            // šířka, do které smíme zalamovat texty (DisplayRectangle zohlední scrollbary)
+            int usable = Math.Max(0, host.DisplayRectangle.Width - 8);
+
+            foreach (Control c in host.Controls)
+            {
+                // necháváme jen Top|Left, ať se prvky "nepřipínají" k pravému okraji
+                c.Anchor = AnchorStyles.Top | AnchorStyles.Left;
+
+                // DŮLEŽITÉ: Už NEMĚŇ šířku všech prvků na usable!
+                // c.Width = Math.Max(c.MinimumSize.Width, usable);  <-- Tohle smaž/zakomentuj
+
+                // U labelů dovol zalomení (aby to "fitnulo", když to jde)
+                if (c is Label lbl)
+                {
+                    lbl.AutoSize = true;
+                    lbl.MaximumSize = new Size(usable, 0);  // zalom, když je prostor úzký
+                }
+            }
+
+            // Spočti reálnou velikost obsahu a vynuť panelu horizontální/vertikální scroll
+            int contentW = 0, contentH = 0;
+            foreach (Control c in host.Controls)
+            {
+                contentW = Math.Max(contentW, c.Right);
+                contentH = Math.Max(contentH, c.Bottom);
+            }
+            host.AutoScrollMinSize = new Size(contentW + 16, contentH + 16);
+        }
+
+
 
         protected override void OnResize(EventArgs e)
         {
