@@ -74,7 +74,7 @@ namespace Bohemia_Solutions
             tsbHelp = new ToolStripButton();
             tsbEditChangeLog = new ToolStripButton();
             statusStrip1 = new StatusStrip();
-            lblStatusSpring = new ToolStripStatusLabel();
+            lblActualVersion = new ToolStripStatusLabel();
             lblVersion = new ToolStripStatusLabel();
             lblBuildTime = new ToolStripStatusLabel();
             panel1.SuspendLayout();
@@ -592,20 +592,20 @@ namespace Bohemia_Solutions
             // 
             // statusStrip1
             // 
-            statusStrip1.Items.AddRange(new ToolStripItem[] { lblStatusSpring, lblVersion, lblBuildTime });
+            statusStrip1.Items.AddRange(new ToolStripItem[] { lblActualVersion, lblVersion, lblBuildTime });
             statusStrip1.Location = new Point(0, 902);
             statusStrip1.Name = "statusStrip1";
             statusStrip1.Size = new Size(1823, 30);
             statusStrip1.TabIndex = 29;
             statusStrip1.Text = "statusStrip1";
             // 
-            // lblStatusSpring
+            // lblActualVersion
             // 
-            lblStatusSpring.Name = "lblStatusSpring";
-            lblStatusSpring.Size = new Size(1496, 25);
-            lblStatusSpring.Spring = true;
-            lblStatusSpring.Text = "toolStripStatusLabel1";
-            lblStatusSpring.Visible = false;
+            lblActualVersion.Name = "lblActualVersion";
+            lblActualVersion.Size = new Size(1465, 25);
+            lblActualVersion.Spring = true;
+            lblActualVersion.Text = "toolStripStatusLabel1";
+            lblActualVersion.Visible = false;
             // 
             // lblVersion
             // 
@@ -728,7 +728,7 @@ namespace Bohemia_Solutions
         private ToolStripButton tsbHelp;
         private ToolStripButton tsbEditChangeLog;
         private StatusStrip statusStrip1;
-        private ToolStripStatusLabel lblStatusSpring;
+        private ToolStripStatusLabel lblActualVersion;
         private ToolStripStatusLabel lblVersion;
         private ToolStripStatusLabel lblBuildTime;
     }

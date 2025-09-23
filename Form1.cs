@@ -394,7 +394,8 @@ namespace Bohemia_Solutions
 
             lblVersion.IsLink = true;
             lblVersion.LinkBehavior = LinkBehavior.HoverUnderline;
-            lblVersion.Text = $"v{_currentVersion} (Changelog)";
+            lblVersion.Text = $"v{Simplify(Application.ProductVersion)} (Changelog)";
+
 
             // build time (volitelně můžeš mít vlastní hodnotu)
             var buildTime = DateTime.Now; // nebo z Resource/CI proměnné
@@ -407,6 +408,20 @@ namespace Bohemia_Solutions
                 dlg.ShowDialog(this);
             };
            
+        }
+
+
+        private static string Simplify(string v)
+        {
+            // odřízni suffixy typu +commit/-beta a přebytečné .0
+            var s = v.Trim().TrimStart('v', 'V');
+            var cut = s.IndexOfAny(new[] { '-', '+' });
+            if (cut >= 0) s = s.Substring(0, cut);
+            if (!Version.TryParse(s, out var ver)) return s;
+            var parts = ver.ToString().Split('.');
+            var n = parts.Length;
+            while (n > 1 && parts[n - 1] == "0") n--;
+            return string.Join(".", parts, 0, n);
         }
 
 

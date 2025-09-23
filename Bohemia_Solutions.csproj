@@ -7,6 +7,10 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+	<Version>1.0.3</Version>
+	<FileVersion>1.0.3.0</FileVersion>
+	<AssemblyVersion>1.0.3.0</AssemblyVersion>
+	<InformationalVersion>1.0.3</InformationalVersion>
   </PropertyGroup>
 
   <ItemGroup>
