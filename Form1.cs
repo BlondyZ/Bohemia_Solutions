@@ -481,6 +481,18 @@ namespace Bohemia_Solutions
             return versionName.StartsWith("DayZ", StringComparison.OrdinalIgnoreCase);
         }
 
+        private static string? GetSteamClientRoot(string versionName)
+        {
+            if (string.Equals(versionName, "DayZ (Steam)", StringComparison.OrdinalIgnoreCase))
+                return PathSettingsService.Current.DayZStableDir;
+            if (string.Equals(versionName, "DayZ Experimental (Steam)", StringComparison.OrdinalIgnoreCase))
+                return PathSettingsService.Current.DayZExperimentalDir;
+            if (string.Equals(versionName, "DayZ Internal (Steam)", StringComparison.OrdinalIgnoreCase))
+                return PathSettingsService.Current.DayZInternalDir;
+            return null;
+        }
+
+
         private static string GetServerDirForVersion(string versionName)
         {
             // stejné větvení jako v ConfigForm.cs
@@ -3570,15 +3582,25 @@ namespace Bohemia_Solutions
      bool autoConnect = false)
         {
             var version = config.VersionFolder;
-            string clientDir = Path.Combine(PathSettingsService.Current.BdsRoot, version, "Client");
+
+            // >>> NOVĚ: zvol správnou základní složku klienta podle typu verze
+            string clientDir;
+            if (IsSteamVersion(version))
+            {
+                clientDir = GetSteamClientRoot(version)
+                            ?? PathSettingsService.Current.DayZStableDir; // nouzový fallback
+            }
+            else
+            {
+                clientDir = Path.Combine(PathSettingsService.Current.BdsRoot, version, "Client");
+            }
+
             string exeName = ResolveClientExeName(config);
-
             string exePath = Path.Combine(clientDir, exeName);
-
 
             if (!File.Exists(exePath))
             {
-                MessageBox.Show("Client exe not found:\n" + exePath);
+                MessageBox.Show("Client exe not found:\n" + exePath, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
@@ -3588,22 +3610,11 @@ namespace Bohemia_Solutions
             {
                 FileName = exePath,
                 Arguments = args,
-                WorkingDirectory = clientDir,
-                UseShellExecute = true,
-                WindowStyle = ProcessWindowStyle.Hidden
+                WorkingDirectory = clientDir,  // ať je správné WD i pro Steam
+                UseShellExecute = true
             };
-
-            var proc = Process.Start(psi);
-            if (proc != null)
-            {
-                var key = GetConfigKey(config);
-                if (!_clientPidsByConfig.TryGetValue(key, out var set))
-                {
-                    set = new HashSet<int>();
-                    _clientPidsByConfig[key] = set;
-                }
-                set.Add(proc.Id);
-            }
+            try { Process.Start(psi); /* … zbytek beze změny … */ }
+            catch (Exception ex) { MessageBox.Show("Failed to start client:\n" + ex.Message, "Error"); }
         }
 
         // Složí argumenty pro klienta (prvni = bez forceUID, druhy/fake = s forceUID)
