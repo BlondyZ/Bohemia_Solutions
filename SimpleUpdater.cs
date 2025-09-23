@@ -87,6 +87,7 @@ namespace Bohemia_Solutions.Services
             };
             Process.Start(psi);
 
+
             // zavři aplikaci, aby mohl skript přepsat soubory
             Application.Exit();
         }
