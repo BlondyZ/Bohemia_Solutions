@@ -185,6 +185,34 @@
           "Text": "Update overlay (spinner \u002B text) is now perfectly centered on all window sizes and in maximized mode."
         }
       ]
+    },
+    {
+      "Version": "1.0.9",
+      "Date": "2025-09-24T14:50:00",
+      "Items": [
+        {
+          "Type": "FIXED",
+          "Text": "Loading spinner is now perfectly centered on all window sizes and DPI scales."
+        },
+        {
+          "Type": "CHANGED",
+          "Text": "Spinner size scales dynamically with window size for consistent look."
+        }
+      ]
+    },
+    {
+      "Version": "1.1.0",
+      "Date": "2025-09-24T17:00:00",
+      "Items": [
+        {
+          "Type": "CHANGED",
+          "Text": "Post-update launch now starts the new version as Administrator and with the correct working directory."
+        },
+        {
+          "Type": "FIXED",
+          "Text": "Config files failing to load immediately after auto-update due to wrong working directory."
+        }
+      ]
     }
   ]
 }

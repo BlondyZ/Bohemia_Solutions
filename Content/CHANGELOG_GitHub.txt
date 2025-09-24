@@ -1,10 +1,6 @@
-﻿### Added
-- Post-update launch now requests Administrator via UAC; if declined, app falls back to non-elevated start.
-
-### Changed
-- Update script starts the new version with --post-update argument for future post-update hooks.
-- Overlay is hosted directly on the form with Dock=Fill and recalculates layout on every resize.
+﻿### Changed
+- Post-update launch now starts the new version as Administrator and with the correct working directory.
 
 ### Fixed
-- Update overlay (spinner + text) is now perfectly centered on all window sizes and in maximized mode.
+- Config files failing to load immediately after auto-update due to wrong working directory.
 

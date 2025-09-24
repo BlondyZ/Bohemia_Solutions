@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using System.Windows.Forms;
+using System.Security.Principal;
 
 namespace Bohemia_Solutions.Services
 {
@@ -62,7 +63,15 @@ namespace Bohemia_Solutions.Services
 
                 if (!IsNewer(remoteVer, Application.ProductVersion))
                     return;
-
+                // DEBUG: zjisti, zda app běží jako admin
+                var isAdmin = IsRunAsAdmin();
+              /*  MessageBox.Show(owner,
+    $"App is running as: {(isAdmin ? "Administrator" : "Standard user")}\n" +
+    $"Exe: {Application.ExecutablePath}\n" +
+    $"PID: {Environment.ProcessId}",
+    "Runtime elevation",
+    MessageBoxButtons.OK,
+    MessageBoxIcon.Information);*/
                 var currentPretty = PrettyVersion(Application.ProductVersion);
                 var msg = $"New version {remoteVer} is available.\n\n" +
                           $"Current version: {currentPretty}\n\n" +
@@ -90,6 +99,14 @@ namespace Bohemia_Solutions.Services
                 onEnd?.Invoke();
             }
         }
+
+        private static bool IsRunAsAdmin()
+        {
+            using var id = WindowsIdentity.GetCurrent();
+            var pr = new WindowsPrincipal(id);
+            return pr.IsInRole(WindowsBuiltInRole.Administrator);
+        }
+
 
         private static async Task ExtractZipWithProgressAsync(string zipPath, string extractDir, IProgress<(int, string)> progress)
         {
@@ -247,10 +264,11 @@ robocopy ""%SRC%"" ""%DST%"" /E /R:3 /W:1 /NFL /NDL /NJH /NJS ^
 :: 2) přepiš changelog z releasu
 if exist ""%SRC%\changelog.json"" copy /Y ""%SRC%\changelog.json"" ""%DST%\changelog.json"" >nul
 
-:: 3) spusť novou verzi jako admin (UAC). Pokud uživatel odmítne, spusť bez elevace.
+:: spusť novou verzi jako admin s korektním WorkingDirectory
+pushd ""%DST%""
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-  ""try { Start-Process -FilePath '%APP%' -ArgumentList '--post-update' -Verb RunAs } ^
-   catch { Start-Process -FilePath '%APP%' -ArgumentList '--post-update' }""
+  ""Start-Process -FilePath '%APP%' -WorkingDirectory '%DST%' -Verb RunAs""
+popd
 
 :: úklid
 rmdir /s /q ""%SRC%""
@@ -258,7 +276,6 @@ del ""%~f0"" >nul 2>&1
 endlocal
 ";
         }
-
 
     }
 }

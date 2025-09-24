@@ -184,15 +184,13 @@ namespace Bohemia_Solutions
         {
             lbl_downloading_text.Text = text;
             lbl_downloading_text.Visible = true;
-
-            // po změně textu spočítej znovu AutoSize (kvůli MaximumSize/wrap)
             lbl_downloading_text.AutoSize = true;
 
             pnl_loading_update.Visible = true;
             pnl_loading_update.BringToFront();
 
             this.UseWaitCursor = true;
-            CenterUpdateOverlay();
+            CenterUpdateOverlay(); // ← důležité po změně textu
         }
 
         private void HideUpdateOverlay()
@@ -206,28 +204,44 @@ namespace Bohemia_Solutions
 
         private void InitUpdateOverlay()
         {
-            // Chceme, aby overlay byl přímo pod Formem a vyplnil celé client area.
+            // Overlay panel musí být přímo na formu a vyplnit client area
             if (pnl_loading_update.Parent != this)
             {
-                // odpoj z předchozího rodiče a připoj přímo k Formu
                 pnl_loading_update.Parent?.Controls.Remove(pnl_loading_update);
                 this.Controls.Add(pnl_loading_update);
             }
 
-            pnl_loading_update.Visible = false;     // standardně skryté
+            pnl_loading_update.Visible = false;
             pnl_loading_update.Dock = DockStyle.Fill;
             pnl_loading_update.Margin = Padding.Empty;
             pnl_loading_update.Padding = Padding.Empty;
+            pnl_loading_update.AutoScroll = false;
             pnl_loading_update.BringToFront();
 
-            // spinner + text vycentrujeme výhradně přes CenterUpdateOverlay()
+            // 🔧 DŮLEŽITÉ: re-parentuj spinner i label PŘÍMO do overlay panelu
+            if (picLoading.Parent != pnl_loading_update)
+            {
+                picLoading.Parent?.Controls.Remove(picLoading);
+                pnl_loading_update.Controls.Add(picLoading);
+            }
+            if (lbl_downloading_text.Parent != pnl_loading_update)
+            {
+                lbl_downloading_text.Parent?.Controls.Remove(lbl_downloading_text);
+                pnl_loading_update.Controls.Add(lbl_downloading_text);
+            }
+
+            // Základní nastavení prvků
             picLoading.Anchor = AnchorStyles.None;
+            picLoading.AutoSize = false;                          // ne, budeme řídit sami
+            picLoading.SizeMode = PictureBoxSizeMode.Zoom;        // pěkné škálování
+
             lbl_downloading_text.Anchor = AnchorStyles.None;
+            lbl_downloading_text.AutoSize = true;
+            lbl_downloading_text.TextAlign = ContentAlignment.MiddleCenter;
+            lbl_downloading_text.BackColor = Color.Transparent;
 
-            // první srovnání
+            // První srovnání + reakce na změny velikosti
             CenterUpdateOverlay();
-
-            // reagovat na změnu velikosti
             this.Resize -= (_, __) => CenterUpdateOverlay();
             pnl_loading_update.Resize -= (_, __) => CenterUpdateOverlay();
             this.Resize += (_, __) => CenterUpdateOverlay();
@@ -241,23 +255,29 @@ namespace Bohemia_Solutions
 
             var cs = pnl_loading_update.ClientSize;
 
-            // nechte label zalamovat (max 90 % šířky overlaye), ať je středění reálné i u delších textů
+            // Dynamická velikost spinneru dle okna (15 % kratší strany; rozsah 64–220 px)
+            int baseSide = Math.Min(cs.Width, cs.Height);
+            int spinnerSide = Math.Max(64, Math.Min(220, (int)(baseSide * 0.15)));
+            if (picLoading.Width != spinnerSide || picLoading.Height != spinnerSide)
+                picLoading.Size = new Size(spinnerSide, spinnerSide);
+
+            // Label nech zalamovat max do 90 % šířky overlaye
             lbl_downloading_text.AutoSize = true;
             lbl_downloading_text.MaximumSize = new Size(Math.Max(100, (int)(cs.Width * 0.9)), 0);
 
-            // spočti ideální pozice
+            // Spočítej ideální pozice (spinner lehce výš)
             int xSpinner = (cs.Width - picLoading.Width) / 2;
-            int ySpinner = (cs.Height - picLoading.Height) / 2 - 16; // trochu výš
+            int ySpinner = (cs.Height - picLoading.Height) / 2 - 16;
 
             picLoading.Location = new Point(Math.Max(0, xSpinner), Math.Max(0, ySpinner));
 
-            // text umísti pod spinner
+            // Text pod spinner
             lbl_downloading_text.Location = new Point(
                 Math.Max(0, (cs.Width - lbl_downloading_text.Width) / 2),
                 picLoading.Bottom + 12
             );
 
-            // pořadí
+            // Pořadí
             pnl_loading_update.BringToFront();
             picLoading.BringToFront();
             lbl_downloading_text.BringToFront();
@@ -5214,7 +5234,7 @@ echo (%time%) %serverName% exited with code %errorlevel%.
         {
             if (listViewConfigsSP.SelectedItems.Count == 0)
             {
-                MessageBox.Show("Vyber konfiguraci pro editaci.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show("Choose configuration", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
 

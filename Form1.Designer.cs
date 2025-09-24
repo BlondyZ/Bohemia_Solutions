@@ -65,9 +65,6 @@ namespace Bohemia_Solutions
             btn_edit_sp = new Button();
             btn_add_sp = new Button();
             tp_Multiplayer = new TabPage();
-            pnl_loading_update = new Panel();
-            lbl_downloading_text = new Label();
-            picLoading = new PictureBox();
             pbButton10 = new PictureBox();
             pbButton9 = new PictureBox();
             pbButton8 = new PictureBox();
@@ -80,6 +77,9 @@ namespace Bohemia_Solutions
             lblActualVersion = new ToolStripStatusLabel();
             lblVersion = new ToolStripStatusLabel();
             lblBuildTime = new ToolStripStatusLabel();
+            lbl_downloading_text = new Label();
+            pnl_loading_update = new Panel();
+            picLoading = new PictureBox();
             panel1.SuspendLayout();
             pnl_Server_Info.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)pb_red).BeginInit();
@@ -97,14 +97,14 @@ namespace Bohemia_Solutions
             ((System.ComponentModel.ISupportInitialize)pictureBox2).BeginInit();
             panel2.SuspendLayout();
             tp_Multiplayer.SuspendLayout();
-            pnl_loading_update.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)picLoading).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pbButton10).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pbButton9).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pbButton8).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pbButton7).BeginInit();
             tsTop.SuspendLayout();
             statusStrip1.SuspendLayout();
+            pnl_loading_update.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)picLoading).BeginInit();
             SuspendLayout();
             // 
             // btn_add
@@ -494,36 +494,6 @@ namespace Bohemia_Solutions
             tp_Multiplayer.UseVisualStyleBackColor = true;
             tp_Multiplayer.Click += tp_Multiplayer_Click;
             // 
-            // pnl_loading_update
-            // 
-            pnl_loading_update.BackgroundImageLayout = ImageLayout.None;
-            pnl_loading_update.Controls.Add(lbl_downloading_text);
-            pnl_loading_update.Controls.Add(picLoading);
-            pnl_loading_update.Location = new Point(0, 32);
-            pnl_loading_update.Name = "pnl_loading_update";
-            pnl_loading_update.Size = new Size(1734, 867);
-            pnl_loading_update.TabIndex = 30;
-            // 
-            // lbl_downloading_text
-            // 
-            lbl_downloading_text.AutoSize = true;
-            lbl_downloading_text.Font = new Font("Segoe UI", 14.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            lbl_downloading_text.Location = new Point(650, 443);
-            lbl_downloading_text.Name = "lbl_downloading_text";
-            lbl_downloading_text.Size = new Size(507, 25);
-            lbl_downloading_text.TabIndex = 31;
-            lbl_downloading_text.Text = "Downloading and installing new version, please wait......";
-            // 
-            // picLoading
-            // 
-            picLoading.Image = (Image)resources.GetObject("picLoading.Image");
-            picLoading.Location = new Point(0, 24);
-            picLoading.Name = "picLoading";
-            picLoading.Size = new Size(1734, 369);
-            picLoading.SizeMode = PictureBoxSizeMode.CenterImage;
-            picLoading.TabIndex = 30;
-            picLoading.TabStop = false;
-            // 
             // pbButton10
             // 
             pbButton10.BorderStyle = BorderStyle.Fixed3D;
@@ -660,6 +630,36 @@ namespace Bohemia_Solutions
             lblBuildTime.Size = new Size(151, 20);
             lblBuildTime.Text = "toolStripStatusLabel1";
             // 
+            // lbl_downloading_text
+            // 
+            lbl_downloading_text.AutoSize = true;
+            lbl_downloading_text.Font = new Font("Segoe UI", 14.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            lbl_downloading_text.Location = new Point(650, 443);
+            lbl_downloading_text.Name = "lbl_downloading_text";
+            lbl_downloading_text.Size = new Size(507, 25);
+            lbl_downloading_text.TabIndex = 31;
+            lbl_downloading_text.Text = "Downloading and installing new version, please wait......";
+            // 
+            // pnl_loading_update
+            // 
+            pnl_loading_update.BackgroundImageLayout = ImageLayout.None;
+            pnl_loading_update.Controls.Add(lbl_downloading_text);
+            pnl_loading_update.Controls.Add(picLoading);
+            pnl_loading_update.Location = new Point(0, 32);
+            pnl_loading_update.Name = "pnl_loading_update";
+            pnl_loading_update.Size = new Size(1734, 867);
+            pnl_loading_update.TabIndex = 30;
+            // 
+            // picLoading
+            // 
+            picLoading.Image = (Image)resources.GetObject("picLoading.Image");
+            picLoading.Location = new Point(0, 24);
+            picLoading.Name = "picLoading";
+            picLoading.Size = new Size(1734, 369);
+            picLoading.SizeMode = PictureBoxSizeMode.CenterImage;
+            picLoading.TabIndex = 30;
+            picLoading.TabStop = false;
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -707,9 +707,6 @@ namespace Bohemia_Solutions
             ((System.ComponentModel.ISupportInitialize)pictureBox2).EndInit();
             panel2.ResumeLayout(false);
             tp_Multiplayer.ResumeLayout(false);
-            pnl_loading_update.ResumeLayout(false);
-            pnl_loading_update.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)picLoading).EndInit();
             ((System.ComponentModel.ISupportInitialize)pbButton10).EndInit();
             ((System.ComponentModel.ISupportInitialize)pbButton9).EndInit();
             ((System.ComponentModel.ISupportInitialize)pbButton8).EndInit();
@@ -718,6 +715,9 @@ namespace Bohemia_Solutions
             tsTop.PerformLayout();
             statusStrip1.ResumeLayout(false);
             statusStrip1.PerformLayout();
+            pnl_loading_update.ResumeLayout(false);
+            pnl_loading_update.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)picLoading).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -770,8 +770,8 @@ namespace Bohemia_Solutions
         private ToolStripStatusLabel lblActualVersion;
         private ToolStripStatusLabel lblVersion;
         private ToolStripStatusLabel lblBuildTime;
-        private PictureBox picLoading;
-        private Panel pnl_loading_update;
         private Label lbl_downloading_text;
+        private Panel pnl_loading_update;
+        private PictureBox picLoading;
     }
 }
