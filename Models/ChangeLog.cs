@@ -15,7 +15,7 @@ namespace Bohemia_Solutions.Models
         public List<ChangeItem> Items { get; set; } = new();  // položky
     }
 
-    public enum ChangeType { ADDED, CHANGED, FIXED, REMOVED }
+    public enum ChangeType { ADDED, CHANGED, FIXED, REMOVED, IMPROVED, STABILITY }
 
     public sealed class ChangeItem
     {

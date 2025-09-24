@@ -242,7 +242,11 @@ namespace Bohemia_Solutions
             await SimpleUpdater.CheckAndOfferAsync(
                 this,
                 onBegin: txt => BeginInvoke(new Action(() => ShowUpdateOverlay(txt))),
-                onEnd: () => BeginInvoke(new Action(HideUpdateOverlay))
+               onEnd: () => BeginInvoke(new Action(() =>
+               {
+                   HideUpdateOverlay();
+                   ReloadAllUserConfigs(); // ← po úspěšné/neúspěšné kontrole znovu načti uživatelské konfigy
+               }))
             );
         }
 
@@ -311,6 +315,9 @@ namespace Bohemia_Solutions
         private readonly System.Windows.Forms.Timer crashLogsTimer = new System.Windows.Forms.Timer();
         private string _crashSigMp = "";
         private string _crashSigSp = "";
+
+        // Volitelný extra user config (pokud používáš "config.json")
+        private JObject? _extraConfig;
 
 
         // --- Filters UI ---
@@ -1172,8 +1179,6 @@ namespace Bohemia_Solutions
             }
         }
 
-
-
         private void LoadGlobalFilters()
         {
             try
@@ -1188,6 +1193,59 @@ namespace Bohemia_Solutions
             }
             catch { _filtersGlobal = new FiltersGlobal(); }
         }
+
+        /// <summary>
+        /// Znovu načte všechny uživatelské konfigy a obnoví UI.
+        /// Voláno po startu a znovu po dokončení kontroly aktualizací.
+        /// </summary>
+        private void ReloadAllUserConfigs()
+        {
+            try
+            {
+                // 1) paths.json (přes službu) – aby se případná úprava cest projevila bez restartu
+                Bohemia_Solutions.Models.PathSettingsService.ReloadFromDisk();
+
+                // 2) MP configs (configs.json)
+                configs = LoadConfigsFromJson();
+                foreach (var cfg in configs)
+                {
+                    if (string.IsNullOrWhiteSpace(cfg.Id))
+                        cfg.Id = Guid.NewGuid().ToString("N");
+                }
+                SaveConfigsToJson(configs); // doplněná Id persistuj
+                FillListView();             // obnov UI (MP list)
+
+                // 3) SP configs (sp_configs.json)
+                LoadSpConfigsFromJson();    // metoda už sama _spConfigs.Clear() dělá
+                RefreshSpListView();        // obnov UI (SP list)
+
+                // 4) Globální filtry (filters_global.json) a jejich UI
+                LoadGlobalFilters();
+                RefreshFilterSelector();    // MP filtr combobox/panel
+                RefreshSpFilterSelector();  // SP filtr combobox/panel
+
+                // 5) Nepovinný extra config.json (pokud ho máš v projektu)
+                try
+                {
+                    if (File.Exists("config.json"))
+                        _extraConfig = JObject.Parse(File.ReadAllText("config.json"));
+                    else
+                        _extraConfig = null;
+                }
+                catch
+                {
+                    _extraConfig = null; // neblokuj zbylé části na chybě
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this,
+                    "Failed to reload user configs:\n" + ex.Message,
+                    "Reload configs",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+        }
+
 
         private void SaveGlobalFilters()
         {

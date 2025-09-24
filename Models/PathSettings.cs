@@ -113,6 +113,14 @@ namespace Bohemia_Solutions.Models
             }
         }
 
+        public static void ReloadFromDisk()
+        {
+            lock (_lock)
+            {
+                _current = LoadOrDefaults(); // znovu načti z paths.json (nebo defaulty)
+            }
+        }
+
         public static bool IsComplete(PathSettings s) =>
             !string.IsNullOrWhiteSpace(s.WorkshopRoot)
             && !string.IsNullOrWhiteSpace(s.LocalWorkshopRoot)

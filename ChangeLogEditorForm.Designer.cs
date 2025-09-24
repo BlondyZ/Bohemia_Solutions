@@ -93,6 +93,7 @@
             btnSave.Size = new Size(75, 23);
             btnSave.TabIndex = 6;
             btnSave.Text = "Save";
+            btnSave.Click += btnSave_Click;
             // 
             // ChangeLogEditorForm
             // 
