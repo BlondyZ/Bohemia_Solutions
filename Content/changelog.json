@@ -163,6 +163,28 @@
           "Text": "Dynamic project-root discovery (no hard-coded paths) when copying changelog.json."
         }
       ]
+    },
+    {
+      "Version": "1.0.8",
+      "Date": "2025-09-24T14:30:00",
+      "Items": [
+        {
+          "Type": "ADDED",
+          "Text": "Post-update launch now requests Administrator via UAC; if declined, app falls back to non-elevated start."
+        },
+        {
+          "Type": "CHANGED",
+          "Text": "Update script starts the new version with --post-update argument for future post-update hooks."
+        },
+        {
+          "Type": "CHANGED",
+          "Text": "Overlay is hosted directly on the form with Dock=Fill and recalculates layout on every resize."
+        },
+        {
+          "Type": "FIXED",
+          "Text": "Update overlay (spinner \u002B text) is now perfectly centered on all window sizes and in maximized mode."
+        }
+      ]
     }
   ]
 }

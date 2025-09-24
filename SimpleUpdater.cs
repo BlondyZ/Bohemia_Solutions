@@ -247,8 +247,10 @@ robocopy ""%SRC%"" ""%DST%"" /E /R:3 /W:1 /NFL /NDL /NJH /NJS ^
 :: 2) přepiš changelog z releasu
 if exist ""%SRC%\changelog.json"" copy /Y ""%SRC%\changelog.json"" ""%DST%\changelog.json"" >nul
 
-:: spusť novou verzi
-start """" ""%APP%""
+:: 3) spusť novou verzi jako admin (UAC). Pokud uživatel odmítne, spusť bez elevace.
+powershell -NoProfile -ExecutionPolicy Bypass -Command ^
+  ""try { Start-Process -FilePath '%APP%' -ArgumentList '--post-update' -Verb RunAs } ^
+   catch { Start-Process -FilePath '%APP%' -ArgumentList '--post-update' }""
 
 :: úklid
 rmdir /s /q ""%SRC%""
@@ -256,6 +258,7 @@ del ""%~f0"" >nul 2>&1
 endlocal
 ";
         }
+
 
     }
 }

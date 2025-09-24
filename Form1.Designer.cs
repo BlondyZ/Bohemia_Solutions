@@ -60,14 +60,14 @@ namespace Bohemia_Solutions
             pictureBox1 = new PictureBox();
             pictureBox2 = new PictureBox();
             panel2 = new Panel();
-            pnl_loading_update = new Panel();
-            lbl_downloading_text = new Label();
-            picLoading = new PictureBox();
             btn_remove_sp = new Button();
             listViewConfigsSP = new ListView();
             btn_edit_sp = new Button();
             btn_add_sp = new Button();
             tp_Multiplayer = new TabPage();
+            pnl_loading_update = new Panel();
+            lbl_downloading_text = new Label();
+            picLoading = new PictureBox();
             pbButton10 = new PictureBox();
             pbButton9 = new PictureBox();
             pbButton8 = new PictureBox();
@@ -96,9 +96,9 @@ namespace Bohemia_Solutions
             ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pictureBox2).BeginInit();
             panel2.SuspendLayout();
+            tp_Multiplayer.SuspendLayout();
             pnl_loading_update.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)picLoading).BeginInit();
-            tp_Multiplayer.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)pbButton10).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pbButton9).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pbButton8).BeginInit();
@@ -440,36 +440,6 @@ namespace Bohemia_Solutions
             panel2.Size = new Size(674, 773);
             panel2.TabIndex = 11;
             // 
-            // pnl_loading_update
-            // 
-            pnl_loading_update.BackgroundImageLayout = ImageLayout.None;
-            pnl_loading_update.Controls.Add(lbl_downloading_text);
-            pnl_loading_update.Controls.Add(picLoading);
-            pnl_loading_update.Location = new Point(0, 32);
-            pnl_loading_update.Name = "pnl_loading_update";
-            pnl_loading_update.Size = new Size(1734, 867);
-            pnl_loading_update.TabIndex = 30;
-            // 
-            // lbl_downloading_text
-            // 
-            lbl_downloading_text.AutoSize = true;
-            lbl_downloading_text.Font = new Font("Segoe UI", 14.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            lbl_downloading_text.Location = new Point(650, 443);
-            lbl_downloading_text.Name = "lbl_downloading_text";
-            lbl_downloading_text.Size = new Size(507, 25);
-            lbl_downloading_text.TabIndex = 31;
-            lbl_downloading_text.Text = "Downloading and installing new version, please wait......";
-            // 
-            // picLoading
-            // 
-            picLoading.Image = (Image)resources.GetObject("picLoading.Image");
-            picLoading.Location = new Point(24, 24);
-            picLoading.Name = "picLoading";
-            picLoading.Size = new Size(1704, 369);
-            picLoading.SizeMode = PictureBoxSizeMode.CenterImage;
-            picLoading.TabIndex = 30;
-            picLoading.TabStop = false;
-            // 
             // btn_remove_sp
             // 
             btn_remove_sp.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
@@ -523,6 +493,36 @@ namespace Bohemia_Solutions
             tp_Multiplayer.Text = "Multi-player";
             tp_Multiplayer.UseVisualStyleBackColor = true;
             tp_Multiplayer.Click += tp_Multiplayer_Click;
+            // 
+            // pnl_loading_update
+            // 
+            pnl_loading_update.BackgroundImageLayout = ImageLayout.None;
+            pnl_loading_update.Controls.Add(lbl_downloading_text);
+            pnl_loading_update.Controls.Add(picLoading);
+            pnl_loading_update.Location = new Point(0, 32);
+            pnl_loading_update.Name = "pnl_loading_update";
+            pnl_loading_update.Size = new Size(1734, 867);
+            pnl_loading_update.TabIndex = 30;
+            // 
+            // lbl_downloading_text
+            // 
+            lbl_downloading_text.AutoSize = true;
+            lbl_downloading_text.Font = new Font("Segoe UI", 14.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            lbl_downloading_text.Location = new Point(650, 443);
+            lbl_downloading_text.Name = "lbl_downloading_text";
+            lbl_downloading_text.Size = new Size(507, 25);
+            lbl_downloading_text.TabIndex = 31;
+            lbl_downloading_text.Text = "Downloading and installing new version, please wait......";
+            // 
+            // picLoading
+            // 
+            picLoading.Image = (Image)resources.GetObject("picLoading.Image");
+            picLoading.Location = new Point(0, 24);
+            picLoading.Name = "picLoading";
+            picLoading.Size = new Size(1734, 369);
+            picLoading.SizeMode = PictureBoxSizeMode.CenterImage;
+            picLoading.TabIndex = 30;
+            picLoading.TabStop = false;
             // 
             // pbButton10
             // 
@@ -706,10 +706,10 @@ namespace Bohemia_Solutions
             ((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();
             ((System.ComponentModel.ISupportInitialize)pictureBox2).EndInit();
             panel2.ResumeLayout(false);
+            tp_Multiplayer.ResumeLayout(false);
             pnl_loading_update.ResumeLayout(false);
             pnl_loading_update.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)picLoading).EndInit();
-            tp_Multiplayer.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)pbButton10).EndInit();
             ((System.ComponentModel.ISupportInitialize)pbButton9).EndInit();
             ((System.ComponentModel.ISupportInitialize)pbButton8).EndInit();

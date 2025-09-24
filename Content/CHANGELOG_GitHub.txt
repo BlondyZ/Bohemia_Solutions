@@ -1,19 +1,10 @@
 ﻿### Added
-- Central ReloadAllUserConfigs() to reload configs.json, sp_configs.json, filters_global.json, paths.json, and optional config.json in one shot.
-- Automatic reload of all user configs on app startup and again right after the update check completes.
-- ChangeLogEditor now propagates changelog.json to the project root and to Content/ automatically on Save (for update packaging).
+- Post-update launch now requests Administrator via UAC; if declined, app falls back to non-elevated start.
 
 ### Changed
-- PathSettingsService now supports ReloadFromDisk() to re-read paths.json without restarting the app.
+- Update script starts the new version with --post-update argument for future post-update hooks.
+- Overlay is hosted directly on the form with Dock=Fill and recalculates layout on every resize.
 
 ### Fixed
-- Missing/empty Id values in configs.json are auto-generated and persisted during reload.
-- Stale paths after in-place updates; paths are now reloaded from disk to prevent mismatches.
-
-### Improved
-- UI refresh hooks: MP/SP lists and filter selectors are reliably refreshed after a reload.
-- Dynamic project-root discovery (no hard-coded paths) when copying changelog.json.
-
-### Stability
-- Reload errors are caught and shown as a single warning dialog so startup isn’t blocked.
+- Update overlay (spinner + text) is now perfectly centered on all window sizes and in maximized mode.
 

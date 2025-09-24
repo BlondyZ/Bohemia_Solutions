@@ -36,18 +36,23 @@ namespace Bohemia_Solutions
         public Form1()
         {
             InitializeComponent();
-            // --- overlay init ---
-            pnl_loading_update.Visible = false;           // defaultně skryté
-            this.UseWaitCursor = false;
+            // --- UPDATE OVERLAY (full-screen, always centered) ---
+            InitUpdateOverlay();
 
+            // jemné nastavení labelu (wrap + center text)
             lbl_downloading_text.AutoSize = true;
             lbl_downloading_text.TextAlign = ContentAlignment.MiddleCenter;
-            lbl_downloading_text.ForeColor = SystemColors.ControlText;
-            // pokud bys měl Panel s jinou barvou, klidně:
             lbl_downloading_text.BackColor = Color.Transparent;
 
-            pnl_loading_update.Resize += (_, __) => PositionUpdateOverlay();
-            this.Resize += (_, __) => PositionUpdateOverlay();
+            // zajisti, že spinner i text nejsou ukotvené (jinak by "táhly" k rohům)
+            picLoading.Anchor = AnchorStyles.None;
+            lbl_downloading_text.Anchor = AnchorStyles.None;
+
+            // přepočítávej pozici při každém resize okna i overlay panelu
+            this.Resize -= (_, __) => CenterUpdateOverlay();
+            pnl_loading_update.Resize -= (_, __) => CenterUpdateOverlay();
+            this.Resize += (_, __) => CenterUpdateOverlay();
+            pnl_loading_update.Resize += (_, __) => CenterUpdateOverlay();
 
 
             _ = CheckForUpdateAsync(Bohemia_Solutions.UpdateConfig.ManifestUrl);
@@ -180,11 +185,14 @@ namespace Bohemia_Solutions
             lbl_downloading_text.Text = text;
             lbl_downloading_text.Visible = true;
 
+            // po změně textu spočítej znovu AutoSize (kvůli MaximumSize/wrap)
+            lbl_downloading_text.AutoSize = true;
+
             pnl_loading_update.Visible = true;
             pnl_loading_update.BringToFront();
 
-            this.UseWaitCursor = true;    // čekací kurzor pro celé okno
-            PositionUpdateOverlay();
+            this.UseWaitCursor = true;
+            CenterUpdateOverlay();
         }
 
         private void HideUpdateOverlay()
@@ -198,37 +206,61 @@ namespace Bohemia_Solutions
 
         private void InitUpdateOverlay()
         {
-            // overlay přes celý formulář
+            // Chceme, aby overlay byl přímo pod Formem a vyplnil celé client area.
+            if (pnl_loading_update.Parent != this)
+            {
+                // odpoj z předchozího rodiče a připoj přímo k Formu
+                pnl_loading_update.Parent?.Controls.Remove(pnl_loading_update);
+                this.Controls.Add(pnl_loading_update);
+            }
+
+            pnl_loading_update.Visible = false;     // standardně skryté
             pnl_loading_update.Dock = DockStyle.Fill;
+            pnl_loading_update.Margin = Padding.Empty;
+            pnl_loading_update.Padding = Padding.Empty;
             pnl_loading_update.BringToFront();
 
-            // pro test pozice si můžeš nechat viditelné, ale normálně to schováme:
-            //pnl_loading_update.Visible = true;    // ← nech si to teď klidně odkomentované kvůli ověření pozice
-            pnl_loading_update.Visible = false;     // ← standardně schované (až potvrdí update, zobrazíme)
+            // spinner + text vycentrujeme výhradně přes CenterUpdateOverlay()
+            picLoading.Anchor = AnchorStyles.None;
+            lbl_downloading_text.Anchor = AnchorStyles.None;
 
+            // první srovnání
             CenterUpdateOverlay();
-            // centrovat při každé změně velikosti
+
+            // reagovat na změnu velikosti
+            this.Resize -= (_, __) => CenterUpdateOverlay();
+            pnl_loading_update.Resize -= (_, __) => CenterUpdateOverlay();
             this.Resize += (_, __) => CenterUpdateOverlay();
             pnl_loading_update.Resize += (_, __) => CenterUpdateOverlay();
         }
 
         private void CenterUpdateOverlay()
         {
-            // bezpečnost
+            if (!pnl_loading_update.Visible) return;
             if (pnl_loading_update == null || picLoading == null || lbl_downloading_text == null) return;
 
-            // přepočet pozic – vždy doprostřed
-            int cx = Math.Max(0, (pnl_loading_update.ClientSize.Width - picLoading.Width) / 2);
-            int cy = Math.Max(0, (pnl_loading_update.ClientSize.Height - picLoading.Height) / 2) - 16; // lehce výš
+            var cs = pnl_loading_update.ClientSize;
 
-            picLoading.Location = new Point(cx, cy);
+            // nechte label zalamovat (max 90 % šířky overlaye), ať je středění reálné i u delších textů
+            lbl_downloading_text.AutoSize = true;
+            lbl_downloading_text.MaximumSize = new Size(Math.Max(100, (int)(cs.Width * 0.9)), 0);
 
-            // text pod spinnerem
-            lbl_downloading_text.AutoSize = true; // ať si spočítá vlastní šířku
+            // spočti ideální pozice
+            int xSpinner = (cs.Width - picLoading.Width) / 2;
+            int ySpinner = (cs.Height - picLoading.Height) / 2 - 16; // trochu výš
+
+            picLoading.Location = new Point(Math.Max(0, xSpinner), Math.Max(0, ySpinner));
+
+            // text umísti pod spinner
             lbl_downloading_text.Location = new Point(
-                Math.Max(0, (pnl_loading_update.ClientSize.Width - lbl_downloading_text.Width) / 2),
+                Math.Max(0, (cs.Width - lbl_downloading_text.Width) / 2),
                 picLoading.Bottom + 12
             );
+
+            // pořadí
+            pnl_loading_update.BringToFront();
+            picLoading.BringToFront();
+            lbl_downloading_text.BringToFront();
         }
 
 
