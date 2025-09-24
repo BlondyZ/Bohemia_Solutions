@@ -213,6 +213,16 @@
           "Text": "Config files failing to load immediately after auto-update due to wrong working directory."
         }
       ]
+    },
+    {
+      "Version": "1.1.1",
+      "Date": "2025-09-24T23:55:00",
+      "Items": [
+        {
+          "Type": "CHANGED",
+          "Text": "Paths to configs. From now they will be located in %Appdata%"
+        }
+      ]
     }
   ]
 }

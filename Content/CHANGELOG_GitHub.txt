@@ -1,6 +1,3 @@
 ﻿### Changed
-- Post-update launch now starts the new version as Administrator and with the correct working directory.
-
-### Fixed
-- Config files failing to load immediately after auto-update due to wrong working directory.
+- Paths to configs. From now they will be located in %Appdata%
 

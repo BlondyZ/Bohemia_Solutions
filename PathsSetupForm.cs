@@ -431,6 +431,8 @@ namespace Bohemia_Solutions
             }
 
             PathSettingsService.Save(s);
+            SavePathsJsonNow();                                          // ⬅ přidej
+            Bohemia_Solutions.Models.PathSettingsService.ReloadFromDisk(); // (volitelně)
             DialogResult = DialogResult.OK;
             Close();
         }
@@ -459,6 +461,24 @@ namespace Bohemia_Solutions
             }
         }
 
+
+        private void SavePathsJsonNow()
+        {
+            try
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(PathSettingsService.ConfigFilePath)!);
+                var json = System.Text.Json.JsonSerializer.Serialize(
+                    Bohemia_Solutions.Models.PathSettingsService.Current,
+                    new System.Text.Json.JsonSerializerOptions { WriteIndented = true }
+                );
+                File.WriteAllText(PathSettingsService.ConfigFilePath, json);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, "Unable to save paths.json:\n" + ex.Message,
+                    "Save error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
 
         private void ValidateAll()
         {

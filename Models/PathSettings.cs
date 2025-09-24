@@ -64,29 +64,20 @@ namespace Bohemia_Solutions.Models
 
 
 
-        // Preferuj vedle EXE; pokud není zapisovatelné, spadni do LocalAppData
+        // VŽDY do Roaming\Bohemia_Solutions\paths.json (sjednocení s ostatními konfigy)
         public static string ConfigFilePath
         {
             get
             {
                 if (_configFilePath != null) return _configFilePath;
 
-                var exeDir = AppContext.BaseDirectory;
-                var exePath = Path.Combine(exeDir, "paths.json");
-
-                if (IsDirectoryWritable(exeDir))
-                {
-                    _configFilePath = exePath;
-                }
-                else
-                {
-                    var appDir = Path.Combine(
-                        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                        "BohemiaSolutions");
-                    Directory.CreateDirectory(appDir);
-                    _configFilePath = Path.Combine(appDir, "paths.json");
-                }
-                return _configFilePath!;
+                var roaming = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                    "Bohemia_Solutions"
+                );
+                Directory.CreateDirectory(roaming);
+                _configFilePath = Path.Combine(roaming, "paths.json");
+                return _configFilePath;
             }
         }
 
@@ -117,9 +108,46 @@ namespace Bohemia_Solutions.Models
         {
             lock (_lock)
             {
-                _current = LoadOrDefaults(); // znovu načti z paths.json (nebo defaulty)
+                MigrateIfNeeded();
+                _current = LoadOrDefaults();
             }
         }
+
+        private static void MigrateIfNeeded()
+        {
+            try
+            {
+                // pokud už máme nový soubor, nic nedělej
+                if (File.Exists(ConfigFilePath)) return;
+
+                var candidates = new[]
+                {
+            // a) staré umístění vedle EXE
+            Path.Combine(AppContext.BaseDirectory, "paths.json"),
+            // b) staré LocalAppData\BohemiaSolutions\paths.json
+            Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "BohemiaSolutions",
+                "paths.json"
+            )
+        };
+
+                foreach (var oldPath in candidates)
+                {
+                    if (File.Exists(oldPath))
+                    {
+                        Directory.CreateDirectory(Path.GetDirectoryName(ConfigFilePath)!);
+                        File.Copy(oldPath, ConfigFilePath, overwrite: false);
+                        break;
+                    }
+                }
+            }
+            catch
+            {
+                // ignore – v nejhorším pojedeme s defaulty a soubor se vytvoří při prvním uložení
+            }
+        }
+
 
         public static bool IsComplete(PathSettings s) =>
             !string.IsNullOrWhiteSpace(s.WorkshopRoot)

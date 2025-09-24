@@ -1,5 +1,6 @@
 
 using Bohemia_Solutions.Models;  // ⬅ přidej na začátek souboru
+using System.IO;
 namespace Bohemia_Solutions
 {
     internal static class Program
@@ -13,6 +14,7 @@ namespace Bohemia_Solutions
             Application.SetHighDpiMode(HighDpiMode.PerMonitorV2);
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+            try { Directory.SetCurrentDirectory(AppContext.BaseDirectory); } catch { /* ignore */ }
             // ⬇⬇⬇ Guard: bez nastavených cest nespouštěj aplikaci
             if (!PathsSetupForm.EnsureConfiguredAndShowIfNeeded())
             {

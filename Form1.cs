@@ -36,6 +36,20 @@ namespace Bohemia_Solutions
         public Form1()
         {
             InitializeComponent();
+            Directory.CreateDirectory(AppDataDir);
+            configsFilePath = Path.Combine(AppDataDir, "configs.json");
+            MigrateLegacyConfigsIfNeeded();
+
+            // přidej:
+            SpConfigsFilePath = Path.Combine(AppDataDir, "sp_configs.json");
+            FiltersGlobalPath = Path.Combine(AppDataDir, "filters_global.json");
+            PathsFilePath = Path.Combine(AppDataDir, "paths.json");
+
+            MigrateLegacyPathsIfNeeded();
+            Bohemia_Solutions.Models.PathSettingsService.ReloadFromDisk();
+
+            MigrateLegacySpConfigsIfNeeded();
+            MigrateLegacyFiltersIfNeeded();
             // --- UPDATE OVERLAY (full-screen, always centered) ---
             InitUpdateOverlay();
 
@@ -144,6 +158,9 @@ namespace Bohemia_Solutions
             listViewConfigs.DoubleClick += btn_edit_Click;
 
         }
+
+      
+
 
         private void MaybeMaximizeForSmallScreens()
         {
@@ -360,7 +377,9 @@ namespace Bohemia_Solutions
         private volatile bool _appClosing = false;
 
         private readonly ToolTip ipTip = new ToolTip();
-        private readonly string configsFilePath = "configs.json"; // můžeš změnit cestu
+        private static readonly string AppDataDir =
+     Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Bohemia_Solutions");
+        private readonly string configsFilePath;
         private List<DayZConfig> configs = new();
         private System.Windows.Forms.Timer serverStatusTimer = new System.Windows.Forms.Timer();
         // --- Crash logs auto-refresh ---
@@ -455,10 +474,10 @@ namespace Bohemia_Solutions
         private readonly Dictionary<string, HashSet<int>> _clientPidsByConfig = new();
 
 
-
+        private readonly string PathsFilePath;
 
         // ==== SINGLE-PLAYER storage ====
-        private readonly string SpConfigsFilePath = "sp_configs.json";
+        private readonly string SpConfigsFilePath;
         private readonly BindingList<SinglePlayerConfig> _spConfigs = new(); // pro data-bind a snadný refresh
         private static readonly JsonSerializerOptions SpJsonOptions = new JsonSerializerOptions
         {
@@ -498,57 +517,57 @@ namespace Bohemia_Solutions
         private bool _isChangelogAdmin = false;
         private ChangelogAuthConfig? _changelogAdminCfg;
 
-    private void EnsureChangelogIsUpToDate()
-    {
-        var src = Paths.InstallChangeLog; // součást release (vedle EXE)
-        var dst = Paths.UserChangeLog;    // uživatelova kopie (%AppData%)
-
-        if (!File.Exists(src)) return;
-
-        if (!File.Exists(dst))
+        private void EnsureChangelogIsUpToDate()
         {
-            SafeCopy(src, dst);
-            return;
+            var src = Paths.InstallChangeLog; // součást release (vedle EXE)
+            var dst = Paths.UserChangeLog;    // uživatelova kopie (%AppData%)
+
+            if (!File.Exists(src)) return;
+
+            if (!File.Exists(dst))
+            {
+                SafeCopy(src, dst);
+                return;
+            }
+
+            string? verSrc = GetLatestVersionFromFile(src);
+            string? verDst = GetLatestVersionFromFile(dst);
+
+            bool srcIsNewer =
+                verSrc != null && verDst != null
+                ? string.Compare(verSrc, verDst, StringComparison.OrdinalIgnoreCase) > 0
+                : File.GetLastWriteTimeUtc(src) > File.GetLastWriteTimeUtc(dst);
+
+            if (srcIsNewer) SafeCopy(src, dst);
         }
 
-        string? verSrc = GetLatestVersionFromFile(src);
-        string? verDst = GetLatestVersionFromFile(dst);
-
-        bool srcIsNewer =
-            verSrc != null && verDst != null
-            ? string.Compare(verSrc, verDst, StringComparison.OrdinalIgnoreCase) > 0
-            : File.GetLastWriteTimeUtc(src) > File.GetLastWriteTimeUtc(dst);
-
-        if (srcIsNewer) SafeCopy(src, dst);
-    }
-
-    private static void SafeCopy(string src, string dst)
-    {
-        try
+        private static void SafeCopy(string src, string dst)
         {
-            if (File.Exists(dst)) File.Copy(dst, dst + ".bak", true);
-            File.Copy(src, dst, true);
+            try
+            {
+                if (File.Exists(dst)) File.Copy(dst, dst + ".bak", true);
+                File.Copy(src, dst, true);
+            }
+            catch { /* logni pokud chceš, ale neshazuj UI */ }
         }
-        catch { /* logni pokud chceš, ale neshazuj UI */ }
-    }
 
-    private static string? GetLatestVersionFromFile(string path)
-    {
-        try
+        private static string? GetLatestVersionFromFile(string path)
         {
-            var json = File.ReadAllText(path);
-            var log = System.Text.Json.JsonSerializer.Deserialize<Bohemia_Solutions.Models.ChangeLog>(json);
+            try
+            {
+                var json = File.ReadAllText(path);
+                var log = System.Text.Json.JsonSerializer.Deserialize<Bohemia_Solutions.Models.ChangeLog>(json);
                 var latest = log?.Versions?
                 .OrderByDescending(v => v.Date)
                 .ThenByDescending(v => v.Version, StringComparer.OrdinalIgnoreCase)
                 .FirstOrDefault();
-            return latest?.Version;
+                return latest?.Version;
+            }
+            catch { return null; }
         }
-        catch { return null; }
-    }
 
 
-    private void InitFooter()
+        private void InitFooter()
         {
             _changeLog = ChangeLogStorage.LoadOrCreate();
 
@@ -568,13 +587,13 @@ namespace Bohemia_Solutions
             var buildTime = DateTime.Now; // nebo z Resource/CI proměnné
             lblBuildTime.Text = "🔄 " + buildTime.ToString("dddd, MMMM d 'at' h:mm tt");
 
-           
+
             lblVersion.Click += (_, __) =>
             {
                 using var dlg = new ChangeLogViewerForm(_changeLog);
                 dlg.ShowDialog(this);
             };
-           
+
         }
 
 
@@ -859,7 +878,7 @@ namespace Bohemia_Solutions
             public List<string> SP { get; set; } = new();
         }
         private FiltersGlobal _filtersGlobal = new();
-        private const string FiltersGlobalPath = "filters_global.json";
+        private readonly string FiltersGlobalPath;
 
         private static string NormalizeFilter(string s) =>
             Regex.Replace((s ?? "").Trim(), @"\s{2,}", " ");
@@ -1255,7 +1274,7 @@ namespace Bohemia_Solutions
             try
             {
                 // 1) paths.json (přes službu) – aby se případná úprava cest projevila bez restartu
-                Bohemia_Solutions.Models.PathSettingsService.ReloadFromDisk();
+                PathSettingsService.ReloadFromDisk();
 
                 // 2) MP configs (configs.json)
                 configs = LoadConfigsFromJson();
@@ -3633,9 +3652,162 @@ namespace Bohemia_Solutions
 
         private void SaveConfigsToJson(List<DayZConfig> configs)
         {
+            Directory.CreateDirectory(AppDataDir);
             string json = JsonConvert.SerializeObject(configs, Formatting.Indented);
             File.WriteAllText(configsFilePath, json);
         }
+        private void MigrateLegacyPathsIfNeeded()
+        {
+            try
+            {
+                if (File.Exists(PathsFilePath)) return;
+
+                var candidates = new List<string>();
+
+                // a) vedle EXE (původní relativní umístění)
+                var baseDir = AppContext.BaseDirectory;
+                candidates.Add(Path.Combine(baseDir, "paths.json"));
+
+                // b) VirtualStore (pokud kdysi zapisoval běžný uživatel do Program Files…)
+                string exeDir = Path.GetDirectoryName(Application.ExecutablePath) ?? "";
+                if (!string.IsNullOrWhiteSpace(exeDir))
+                {
+                    string localVS = Path.Combine(
+                        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                        "VirtualStore"
+                    );
+                    string vsDir = Path.Combine(localVS, exeDir.TrimStart(Path.DirectorySeparatorChar));
+                    candidates.Add(Path.Combine(vsDir, "paths.json"));
+                }
+
+                foreach (var oldPath in candidates)
+                {
+                    if (File.Exists(oldPath))
+                    {
+                        Directory.CreateDirectory(AppDataDir);
+                        File.Copy(oldPath, PathsFilePath, overwrite: false);
+                        break;
+                    }
+                }
+            }
+            catch
+            {
+                // nevadí – začneme s prázdným paths.json při prvním uložení
+            }
+        }
+
+        private void MigrateLegacySpConfigsIfNeeded()
+        {
+            try
+            {
+                if (File.Exists(SpConfigsFilePath)) return;
+
+                var candidates = new List<string>();
+                var baseDir = AppContext.BaseDirectory;
+                candidates.Add(Path.Combine(baseDir, "sp_configs.json"));
+
+                string exeDir = Path.GetDirectoryName(Application.ExecutablePath) ?? "";
+                if (!string.IsNullOrWhiteSpace(exeDir))
+                {
+                    string localVS = Path.Combine(
+                        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                        "VirtualStore"
+                    );
+                    string vsDir = Path.Combine(localVS, exeDir.TrimStart(Path.DirectorySeparatorChar));
+                    candidates.Add(Path.Combine(vsDir, "sp_configs.json"));
+                }
+
+                foreach (var oldPath in candidates)
+                {
+                    if (File.Exists(oldPath))
+                    {
+                        Directory.CreateDirectory(AppDataDir);
+                        File.Copy(oldPath, SpConfigsFilePath, overwrite: false);
+                        break;
+                    }
+                }
+            }
+            catch { /* začneme s prázdným seznamem */ }
+        }
+
+        private void MigrateLegacyFiltersIfNeeded()
+        {
+            try
+            {
+                if (File.Exists(FiltersGlobalPath)) return;
+
+                var candidates = new List<string>();
+                var baseDir = AppContext.BaseDirectory;
+                candidates.Add(Path.Combine(baseDir, "filters_global.json"));
+
+                string exeDir = Path.GetDirectoryName(Application.ExecutablePath) ?? "";
+                if (!string.IsNullOrWhiteSpace(exeDir))
+                {
+                    string localVS = Path.Combine(
+                        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                        "VirtualStore"
+                    );
+                    string vsDir = Path.Combine(localVS, exeDir.TrimStart(Path.DirectorySeparatorChar));
+                    candidates.Add(Path.Combine(vsDir, "filters_global.json"));
+                }
+
+                foreach (var oldPath in candidates)
+                {
+                    if (File.Exists(oldPath))
+                    {
+                        Directory.CreateDirectory(AppDataDir);
+                        File.Copy(oldPath, FiltersGlobalPath, overwrite: false);
+                        break;
+                    }
+                }
+            }
+            catch { /* začneme s čistým registrem */ }
+        }
+
+
+        private void MigrateLegacyConfigsIfNeeded()
+        {
+            try
+            {
+                if (File.Exists(configsFilePath)) return; // už zmigrováno / existuje
+
+                var candidates = new List<string>();
+
+                // a) vedle EXE (původní relativní umístění)
+                var baseDir = AppContext.BaseDirectory;
+                candidates.Add(Path.Combine(baseDir, "configs.json"));
+
+                // b) VirtualStore (pokud kdysi zapisoval běžný uživatel do Program Files…)
+                //  - vytvoř cestu: %LOCALAPPDATA%\VirtualStore\<ABS cesta k adresáři s EXE>
+                string exeDir = Path.GetDirectoryName(Application.ExecutablePath) ?? "";
+                if (!string.IsNullOrWhiteSpace(exeDir))
+                {
+                    string localVS = Path.Combine(
+                        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                        "VirtualStore"
+                    );
+                    // VirtualStore uchovává plnou cestu pod sebou
+                    string vsDir = Path.Combine(localVS, exeDir.TrimStart(Path.DirectorySeparatorChar));
+                    candidates.Add(Path.Combine(vsDir, "configs.json"));
+                }
+
+                // Zkopíruj první existující
+                foreach (var oldPath in candidates)
+                {
+                    if (File.Exists(oldPath))
+                    {
+                        Directory.CreateDirectory(AppDataDir);
+                        File.Copy(oldPath, configsFilePath, overwrite: false);
+                        break;
+                    }
+                }
+            }
+            catch
+            {
+                // necháme být – při neúspěchu se prostě začne s prázdnou sadou
+            }
+        }
+
 
         private void btn_edit_Click(object sender, EventArgs e)
         {
@@ -4668,31 +4840,31 @@ echo (%time%) %serverName% exited with code %errorlevel%.
 
 
         static class Paths
+        {
+            public static string InstallDir => AppContext.BaseDirectory;
+
+            public static string UserConfigDir
             {
-                public static string InstallDir => AppContext.BaseDirectory;
-
-                public static string UserConfigDir
+                get
                 {
-                    get
-                    {
-                        var asm = Assembly.GetExecutingAssembly();
-                        var company = asm.GetCustomAttribute<AssemblyCompanyAttribute>()?.Company ?? "BohemiaSolutions";
-                        var product = asm.GetCustomAttribute<AssemblyProductAttribute>()?.Product ?? Application.ProductName.Replace(' ', '_');
+                    var asm = Assembly.GetExecutingAssembly();
+                    var company = asm.GetCustomAttribute<AssemblyCompanyAttribute>()?.Company ?? "BohemiaSolutions";
+                    var product = asm.GetCustomAttribute<AssemblyProductAttribute>()?.Product ?? Application.ProductName.Replace(' ', '_');
 
-                        var dir = Path.Combine(
-                            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                            company, product);
+                    var dir = Path.Combine(
+                        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                        company, product);
 
-                        Directory.CreateDirectory(dir);
-                        return dir;
-                    }
+                    Directory.CreateDirectory(dir);
+                    return dir;
                 }
+            }
 
-                public static string InstallChangeLog => Path.Combine(InstallDir, "changelog.json");
-                public static string UserChangeLog => Path.Combine(UserConfigDir, "changelog.json");
+            public static string InstallChangeLog => Path.Combine(InstallDir, "changelog.json");
+            public static string UserChangeLog => Path.Combine(UserConfigDir, "changelog.json");
 
-                // (volitelné) admin config – podle toho, zda chceš editor zobrazit jen sobě
-                public static string UserAdminCfg => Path.Combine(UserConfigDir, "changelog_admin.json");
+            // (volitelné) admin config – podle toho, zda chceš editor zobrazit jen sobě
+            public static string UserAdminCfg => Path.Combine(UserConfigDir, "changelog_admin.json");
         }
 
 
@@ -5459,6 +5631,21 @@ echo (%time%) %serverName% exited with code %errorlevel%.
         private void tp_Multiplayer_Click(object sender, EventArgs e)
         {
 
+        }
+
+      
+
+        private void ReloadAllUserConfigsSafe()
+        {
+            try
+            {
+                ReloadAllUserConfigs();  // tvoje centrální metoda z minula
+                MessageBox.Show(this, "Configs reloaded.", "OK", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, "Reload failed:\n" + ex.Message, "Reload configs", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
         }
     }
 }
