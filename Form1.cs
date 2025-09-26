@@ -2218,19 +2218,9 @@ namespace Bohemia_Solutions
             try
             {
                 var jobs = new[]
-                {
-                    new
-                    {
-                        Name = "Client",
-                        Source = PathSettingsService.Current.DayZStableDir,
-                        Target = Path.Combine(PathSettingsService.Current.BdsRoot, "MEBOD", "Client")
-                    },
-                    new
-                    {
-                        Name = "Server",
-                        Source = PathSettingsService.Current.DayZServerStableRoot,
-                        Target = Path.Combine(PathSettingsService.Current.BdsRoot, "MEBOD", "Server")
-                    }
+                 {
+                    new { Name = "Client", Source = "", Target = "" },
+                    new { Name = "Server", Source = "", Target = "" }
                 };
 
 

@@ -358,7 +358,7 @@ namespace Bohemia_Solutions
             tp_SinglePlayer.Padding = new Padding(3);
             tp_SinglePlayer.Size = new Size(1710, 793);
             tp_SinglePlayer.TabIndex = 1;
-            tp_SinglePlayer.Text = "Single-player";
+            tp_SinglePlayer.Text = "Client";
             tp_SinglePlayer.UseVisualStyleBackColor = true;
             // 
             // panel_SP_info
@@ -490,7 +490,7 @@ namespace Bohemia_Solutions
             tp_Multiplayer.Padding = new Padding(3);
             tp_Multiplayer.Size = new Size(1710, 793);
             tp_Multiplayer.TabIndex = 0;
-            tp_Multiplayer.Text = "Multi-player";
+            tp_Multiplayer.Text = "Client + Server";
             tp_Multiplayer.UseVisualStyleBackColor = true;
             tp_Multiplayer.Click += tp_Multiplayer_Click;
             // 

@@ -1,3 +1,7 @@
 ﻿### Changed
-- Paths to configs. From now they will be located in %Appdata%
+- Renaming Tabs from "Single-player" to "Client"
+- Renaming Tabs from "Multi-player" to "Client + Server"
+
+### Removed
+- Removed copying and creating of "MEBOD" folder
 
